@@ -116,9 +116,13 @@ define([ './jquery' ], function($) {
 			}
 			var xrel = e.pageX - loc.x;
 			var yrel = loc.y - e.pageY;
-			rot.x += yrel * 0.01;
-			rot.y += xrel * 0.01;
+			rot.x += yrel * 0.5;
+			rot.y += xrel * 0.5;
 			$(document.body).clearTransform().rotateX(rot.x).rotateY(rot.y);
+			loc = {
+				x : e.pageX,
+				y : e.pageY
+			};
 		});
 	}
 
