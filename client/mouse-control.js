@@ -1,4 +1,4 @@
-define([ './jquery', './transform' ], function($, __transform) {
+define([ './jquery', './transform' ], function($, transform) {
 
 	function MouseControl(element) {
 		this.element = $(element);
@@ -17,6 +17,7 @@ define([ './jquery', './transform' ], function($, __transform) {
 		$(document).mousemove(function(e) {
 			this.move(e.pageX, e.pageY);
 		}.bind(this));
+		requestAnimationFrame(this.onAnimationFrame.bind(this));
 	}
 
 	MouseControl.prototype.start = function(x, y) {
@@ -38,14 +39,14 @@ define([ './jquery', './transform' ], function($, __transform) {
 		};
 		this.rot.x += yrel * 0.5;
 		this.rot.y += xrel * 0.5;
-		this.update();
 	};
 
 	MouseControl.prototype.stop = function() {
 		this.loc = null;
 	};
 
-	MouseControl.prototype.update = function() {
+	MouseControl.prototype.onAnimationFrame = function() {
+		requestAnimationFrame(this.onAnimationFrame.bind(this));
 		this.element.clearTransform().rotateX(this.rot.x).rotateY(this.rot.y);
 	};
 
@@ -54,7 +55,6 @@ define([ './jquery', './transform' ], function($, __transform) {
 			x : 0,
 			y : 0
 		};
-		this.update();
 	};
 
 	return MouseControl;
