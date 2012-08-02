@@ -3,5 +3,15 @@ html(lang="en")
   head
     meta(name='viewport',content='width=device-width,initial-scale=1,maximum-scale=1')
     style
+        body, .container, .cube {
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            -webkit-transform-style: preserve-3d;
+        }
+        .container {
+            top: 50%; right: 50%; bottom: 50%; left: 50%;
+        }
   body
+    div(class='container')
+        div(class='cube')
     script(type='text/javascript',src='require.js',data-main='client')

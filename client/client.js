@@ -1,12 +1,20 @@
-require([ './comms', './webcam', './jquery', './transform', './image-cube' ], function(comms,
-		webcam, $, transform, Cube) {
+require([ './comms', './webcam', './jquery', './transform', './image-cube', './mouse-control',
+		'./dat.gui.min' ], function(comms, webcam, $, transform, Cube, MouseControl) {
+	var options = {
+		background : '#000',
+		renderMovement : true,
+		renderStatic : true,
+		renderThreshold : 5,
+		paused : false,
+		pause : function() {
+			this.paused = !this.paused;
+		}
+	};
 
-	// very basic UI to deal with incoming messages
-	var $container = $('<div/>').appendTo('body').css({
-		webkitTransition : 'webkit-transform 0.3s linear'
-	});
-	var cube = new Cube($container, 128, 96, 500, 100);
-	transform.useMouseRotationControl();
+	var $body = $('body').preserve3d().perspective(100000);
+	var cube = new Cube($('.cube'), 128, 96, 128, 100);
+	var $container = $('.container');
+	var mouseControl = new MouseControl($container);
 
 	webcam.create(128, 96).done(function(webcam) {
 
@@ -16,6 +24,9 @@ require([ './comms', './webcam', './jquery', './transform', './image-cube' ], fu
 		// request 5 fps indefinitely of imagedata objects
 		// http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
 		webcam.requestFrameImageData(10, 0).progress(function(imageData) {
+			if (options.paused) {
+				return;
+			}
 			// manipulate the image
 			var data = imageData.data;
 			var previousData = previousImageData.data;
@@ -24,29 +35,37 @@ require([ './comms', './webcam', './jquery', './transform', './image-cube' ], fu
 				var r = data[i];
 				var g = data[i + 1];
 				var b = data[i + 2];
-				// CIE luminance for the RGB
-				// The human eye is bad at seeing red and blue, so we
-				// de-emphasize them.
 				var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-				v = Math.round(v / 16) * 16;
-				// if (v < 200) {
-				// if (Math.abs(previousData[i] - v) > 10) {
 				deltaData[i] = data[i];
 				deltaData[i + 1] = data[i + 1];
 				deltaData[i + 2] = data[i + 2];
-				deltaData[i + 3] = 255;
-				// } else {
-				// deltaData[i] = deltaData[i + 1] = deltaData[i + 2] = 0;
-				// deltaData[i + 3] = 0;
-				// }
+				if (Math.abs(previousData[i] - v) > options.renderThreshold) {
+					deltaData[i + 3] = options.renderMovement ? 255 : 0;
+				} else {
+					deltaData[i + 3] = options.renderStatic ? 255 : 0;
+				}
 				data[i] = data[i + 1] = data[i + 2] = v;
 			}
 			// draw the image back onto the canvas
 			webcam.putImageData(deltaImageData);
 			previousImageData = imageData;
-			var $img = $("<img/>").attr('src', webcam.toDataURL()).scale(5).css('opacity', 0.2);
+			var $img = $("<img/>").attr('src', webcam.toDataURL());
 			cube.add($img);
+			$body.css('background', options.background);
 		});
 	});
 
+	var gui = new dat.GUI();
+	gui.add(cube, 'opacity', 0, 1);
+	gui.add(cube, 'scaleX', 0, 10);
+	gui.add(cube, 'scaleY', 0, 10);
+	gui.add(cube, 'scaleZ', 0, 100);
+	gui.addColor(options, 'background');
+	gui.add(options, 'renderMovement');
+	gui.add(options, 'renderStatic');
+	gui.add(options, 'renderThreshold', 0, 255);
+	gui.add(options, 'pause');
+	gui.add(mouseControl, 'resetRotation');
+	// reset rotation
+	// momentum
 });

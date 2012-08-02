@@ -1,17 +1,13 @@
 define([ './jquery', './transform' ], function($, css3) {
 
 	function Cube(container, width, height, depth, count) {
-		this.container = $(container).css({
-			position : 'absolute',
-			top : 0,
-			bottom : 0,
-			left : 0,
-			right : 0
-		}).preserve3d();
+		this.container = $(container).css('position', 'absolute');
 		this.width = width;
 		this.height = height;
 		this.depth = depth;
 		this.count = count;
+		this.scaleX = this.scaleY = this.scaleZ = 5;
+		this.opacity = 0.2;
 		this.delta = Math.round(depth / count);
 		this.imgDepthCounter = Math.round(depth / 2);
 		this.containerDepthCounter = 0;
@@ -26,8 +22,9 @@ define([ './jquery', './transform' ], function($, css3) {
 			marginLeft : -this.width / 2
 		}).translate(0, 0, this.imgDepthCounter);
 		this.imgDepthCounter += this.delta;
-		this.container.append($element).clearTransform()
-				.translate(0, 0, this.containerDepthCounter);
+		this.container.append($element).clearTransform().scale(this.scaleX, this.scaleY,
+				this.scaleZ).translate(0, 0, this.containerDepthCounter).css('opacity',
+				this.opacity);
 		this.containerDepthCounter -= this.delta;
 		if (this.container.children().length > this.count) {
 			this.container.children().first().remove();

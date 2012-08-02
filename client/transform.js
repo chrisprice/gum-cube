@@ -34,10 +34,14 @@ define([ './jquery' ], function($) {
 			});
 			return this;
 		},
-		scale : function(f) {
-			$.each(this, function() {
-				applyPrefixed(this, 'transform', 'scale(' + f + ')', true);
-			});
+		scale : function(sx, sy, sz) {
+			$.each(this,
+					function() {
+						sy = sy !== undefined ? sy : sx;
+						sz = sz !== undefined ? sz : sx;
+						applyPrefixed(this, 'transform', 'scale3d(' + sx + ',' + sy + ',' + sz
+								+ ')', true);
+					});
 			return this;
 		},
 		rotateX : function(a) {
@@ -90,43 +94,5 @@ define([ './jquery' ], function($) {
 		}
 	});
 
-	function useMouseRotationControl() {
-		$(document.body).css({
-			position : 'absolute',
-			top : 0,
-			bottom : 0,
-			left : 0,
-			right : 0
-		}).preserve3d().origin('50%', '50%').perspective(100000);
-		var loc = null, rot = {
-			x : 0,
-			y : 0
-		};
-		$(document).mousedown(function(e) {
-			loc = {
-				x : e.pageX,
-				y : e.pageY
-			};
-			e.preventDefault();
-		}).mouseup(function(e) {
-			loc = null;
-		}).mousemove(function(e) {
-			if (!loc) {
-				return;
-			}
-			var xrel = e.pageX - loc.x;
-			var yrel = loc.y - e.pageY;
-			rot.x += yrel * 0.5;
-			rot.y += xrel * 0.5;
-			$(document.body).clearTransform().rotateX(rot.x).rotateY(rot.y);
-			loc = {
-				x : e.pageX,
-				y : e.pageY
-			};
-		});
-	}
-
-	return {
-		useMouseRotationControl : useMouseRotationControl
-	};
+	return {};
 });
