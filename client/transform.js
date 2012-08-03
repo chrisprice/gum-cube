@@ -76,7 +76,7 @@ define([ './jquery' ], function($) {
 		},
 		perspective : function(value) {
 			$.each(this, function() {
-				applyPrefixed(this, 'perspective', value.toFixed(0));
+				applyPrefixed(this, 'perspective', Number(value).toFixed(0));
 			});
 			return this;
 		},

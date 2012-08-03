@@ -84,7 +84,7 @@ define([ './jquery' ], function($) {
 		var ms = 1000 / fps;
 		var frame = 0;
 		var loop = function() {
-			if (++frame !== count) {
+			if (++frame !== count && deferred.state() === 'pending') {
 				setTimeout(loop, ms);
 				this.snapshot();
 				deferred.notify(frame, count);

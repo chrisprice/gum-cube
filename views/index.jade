@@ -10,8 +10,29 @@ html(lang="en")
         }
         .container {
             top: 50%; right: 50%; bottom: 50%; left: 50%;
+            cursor: move;
+        }
+        header, footer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font: 11px 'Lucida Grande', sans-serif;
+        }
+        a {
+            color : white;
+        }
+        header {
+            top: 0;
+        }
+        footer {
+            bottom: 0;
         }
   body
+    header gUM Cube - 
+        a(href='http://www.github.com/chrisprice',rel='author') Chris Price
     div(class='container')
         div(class='cube')
+    footer
     script(type='text/javascript',src='require.js',data-main='client')

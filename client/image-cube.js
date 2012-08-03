@@ -5,29 +5,41 @@ define([ './jquery', './transform' ], function($, css3) {
 		this.width = width;
 		this.height = height;
 		this.depth = depth;
-		this.count = count;
-		this.scaleX = this.scaleY = this.scaleZ = 5;
-		this.opacity = 0.2;
-		this.delta = Math.round(depth / count);
-		this.imgDepthCounter = Math.round(depth / 2);
-		this.containerDepthCounter = 0;
+		this.scaleXY = this.scaleZ = 5;
+		this.setCount(count);
 	}
 
-	Cube.prototype.add = function(element) {
-		var $element = $(element).css({
-			position : 'absolute',
-			top : '50%',
-			left : '50%',
-			marginTop : -this.height / 2,
-			marginLeft : -this.width / 2
-		}).translate(0, 0, this.imgDepthCounter);
-		this.imgDepthCounter += this.delta;
-		this.container.append($element).clearTransform().scale(this.scaleX, this.scaleY,
-				this.scaleZ).translate(0, 0, this.containerDepthCounter).css('opacity',
-				this.opacity);
-		this.containerDepthCounter -= this.delta;
-		if (this.container.children().length > this.count) {
-			this.container.children().first().remove();
+	Cube.prototype.add = function(image) {
+		var ctx;
+		for ( var i = this.children.length - 1; i > 0; i--) {
+			ctx = this.children[i].getContext('2d');
+			ctx.clearRect(0, 0, this.width, this.height);
+			ctx.drawImage(this.children[i - 1], 0, 0);
+		}
+		ctx = this.children[0].getContext('2d');
+		ctx.clearRect(0, 0, this.width, this.height);
+		ctx.drawImage(image, 0, 0);
+
+		this.container.clearTransform().scale(this.scaleXY, this.scaleXY, this.scaleZ);
+	};
+
+	Cube.prototype.setCount = function(count) {
+		this.container.empty();
+		this.children = [];
+		var delta = Math.round(this.depth / count);
+		for ( var z = Math.round(this.depth / 2); z >= -Math.round(this.depth / 2); z -= delta) {
+			var canvas = $('<canvas/>').width(this.width).height(this.height).attr({
+				width : this.width,
+				height : this.height
+			}).css({
+				position : 'absolute',
+				top : '50%',
+				left : '50%',
+				marginTop : -this.height / 2,
+				marginLeft : -this.width / 2
+			}).translate(0, 0, z);
+			this.container.append(canvas);
+			this.children.push(canvas[0]);
 		}
 	};
 
