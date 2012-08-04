@@ -22,12 +22,15 @@ require(
 				},
 				perspective : 1000,
 				fps : 10,
-				frameCount : 10
+				frameCount : 10,
+				scaleXY : 5,
+				scaleZ : 5
 			};
 
 			var $body = $('body').preserve3d();
 			$body.css('background', options.background);
-			var cube = new Cube($('.cube'), 128, 96, 96, options.frameCount);
+			var $cube = $('.cube');
+			var cube = new Cube($cube, 128, 96, 96, options.frameCount);
 			var $container = $('.container');
 			var mouseControl = new MouseControl($container);
 			var webcamControl = null;
@@ -88,7 +91,8 @@ require(
 
 			function updateMisc() {
 				$body.css('background', options.background).perspective(options.perspective);
-				$container.css('opacity', options.opacity)
+				$container.css('opacity', options.opacity);
+				$cube.scale(options.scaleXY, options.scaleXY, options.scaleZ);
 			}
 			updateMisc();
 
@@ -102,8 +106,8 @@ require(
 				'       50' : 50
 			}).onChange(updateMisc);
 			gui.add(options, 'opacity', 0, 1).onChange(updateMisc);
-			gui.add(cube, 'scaleXY', 0, 10);
-			gui.add(cube, 'scaleZ', {
+			gui.add(options, 'scaleXY', 0, 10);
+			gui.add(options, 'scaleZ', {
 				'    1,000' : 1000,
 				'      500' : 500,
 				'      100' : 100,

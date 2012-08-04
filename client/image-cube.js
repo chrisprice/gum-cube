@@ -5,7 +5,6 @@ define([ './jquery', './transform' ], function($, css3) {
 		this.width = width;
 		this.height = height;
 		this.depth = depth;
-		this.scaleXY = this.scaleZ = 5;
 		this.setCount(count);
 	}
 
@@ -19,8 +18,6 @@ define([ './jquery', './transform' ], function($, css3) {
 		ctx = this.children[0].getContext('2d');
 		ctx.clearRect(0, 0, this.width, this.height);
 		ctx.drawImage(image, 0, 0);
-
-		this.container.clearTransform().scale(this.scaleXY, this.scaleXY, this.scaleZ);
 	};
 
 	Cube.prototype.setCount = function(count) {
