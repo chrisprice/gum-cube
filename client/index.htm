@@ -1,0 +1,43 @@
+<!doctype 5>
+<html lang="en">
+  <head>
+    <style>
+        body, .container, .cube {
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            -webkit-transform-style: preserve-3d;
+        }
+        .container {
+            top: 50%; right: 50%; bottom: 50%; left: 50%;
+            cursor: move;
+        }
+        header, footer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font: 11px 'Lucida Grande', sans-serif;
+        }
+        a {
+            color : white;
+        }
+        header {
+            top: 0;
+        }
+        footer {
+            bottom: 0;
+        }
+    </style>
+  </head>
+  <body>
+    <header>gUM Cube - 
+        <a href="http://www.github.com/chrisprice" rel="author">Chris Price</a>
+    </header>
+    <div class="container">
+        <div class="cube"></div>
+    </div>
+    <footer></footer>
+    <script type="text/javascript" src="require.js" data-main="client"></script>
+  </body>
+</html>
