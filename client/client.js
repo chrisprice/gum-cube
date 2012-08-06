@@ -92,7 +92,7 @@ require(
 			function updateMisc() {
 				$body.css('background', options.background).perspective(options.perspective);
 				$container.css('opacity', options.opacity);
-				$cube.scale(options.scaleXY, options.scaleXY, options.scaleZ);
+				$cube.clearTransform().scale(options.scaleXY, options.scaleXY, options.scaleZ);
 			}
 			updateMisc();
 
@@ -106,7 +106,7 @@ require(
 				'       50' : 50
 			}).onChange(updateMisc);
 			gui.add(options, 'opacity', 0, 1).onChange(updateMisc);
-			gui.add(options, 'scaleXY', 0, 10);
+			gui.add(options, 'scaleXY', 0, 10).onChange(updateMisc);
 			gui.add(options, 'scaleZ', {
 				'    1,000' : 1000,
 				'      500' : 500,
@@ -115,7 +115,7 @@ require(
 				'       10' : 10,
 				'        5' : 5,
 				'        1' : 1
-			});
+			}).onChange(updateMisc);
 			gui.add(options, 'renderMovement');
 			gui.add(options, 'renderStatic');
 			gui.add(options, 'renderThreshold', 0, 255);
