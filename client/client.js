@@ -70,7 +70,7 @@ require(
 						deltaData[i] = data[i];
 						deltaData[i + 1] = data[i + 1];
 						deltaData[i + 2] = data[i + 2];
-						if (Math.abs(previousData[i] - v) > options.renderThreshold) {
+						if (Math.abs(previousData[i] - v) >= options.renderThreshold) {
 							deltaData[i + 3] = options.renderMovement ? 255 : 0;
 						} else {
 							deltaData[i + 3] = options.renderStatic ? 255 : 0;
