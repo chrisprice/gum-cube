@@ -4,7 +4,7 @@ define([ './jquery', './transform' ], function($, transform) {
 
 	function MouseControl(element) {
 		this.element = $(element);
-		this.rotationDamping = 0.01;
+		this.rotationDamping = 0.02;
 		this.rot = {
 			x : 5,
 			y : 45
@@ -14,6 +14,7 @@ define([ './jquery', './transform' ], function($, transform) {
 			y : 0
 		};
 		this.loc = null;
+		this.lastMove = null;
 		this.element.origin('50%', '50%').mousedown(function(e) {
 			this.start(e.pageX, e.pageY);
 			e.preventDefault();
@@ -50,21 +51,32 @@ define([ './jquery', './transform' ], function($, transform) {
 			x : x,
 			y : y
 		};
+		this.lastMove = new Date().getTime();
 		this.rot.x += this.vel.x;
 		this.rot.y += this.vel.y;
 	};
 
 	MouseControl.prototype.stop = function(x, y) {
 		this.loc = null;
+		// clear momentum if the user held the last position
+		if (new Date().getTime() - this.lastMove > 200) {
+			this.vel = {
+				x : 0,
+				y : 0
+			};
+		}
+		this.lastMove = null;
 	};
 
 	MouseControl.prototype.onAnimationFrame = function() {
 		requestAnimationFrame(this.onAnimationFrame.bind(this));
 
 		if (!this.loc) {
+			// apply momentum
 			this.rot.x += this.vel.x;
-			this.vel.x *= 1 - this.rotationDamping;
 			this.rot.y += this.vel.y;
+			// apply damping
+			this.vel.x *= 1 - this.rotationDamping;
 			this.vel.y *= 1 - this.rotationDamping;
 		}
 
