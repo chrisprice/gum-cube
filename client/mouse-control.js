@@ -5,14 +5,8 @@ define([ './jquery', './transform' ], function($, transform) {
 	function MouseControl(element) {
 		this.element = $(element);
 		this.rotationDamping = 0.02;
-		this.rot = {
-			x : 5,
-			y : 45
-		};
-		this.vel = {
-			x : 0,
-			y : 0
-		};
+		this.rotX = this.rotY = 0;
+		this.velX = this.velY = 0;
 		this.loc = null;
 		this.lastMove = null;
 		this.element.origin('50%', '50%').mousedown(function(e) {
@@ -33,37 +27,44 @@ define([ './jquery', './transform' ], function($, transform) {
 			x : x,
 			y : y
 		};
-		this.vel = {
-			x : 0,
-			y : 0
-		};
+		this.velX = 0;
+		this.velY = 0;
 	};
 
 	MouseControl.prototype.move = function(x, y) {
 		if (!this.loc) {
 			return;
 		}
-		this.vel = {
-			x : (this.loc.y - y) * SCALE,
-			y : (x - this.loc.x) * SCALE
-		};
+		this.velX = (this.loc.y - y) * SCALE;
+		this.velY = (x - this.loc.x) * SCALE;
 		this.loc = {
 			x : x,
 			y : y
 		};
 		this.lastMove = new Date().getTime();
-		this.rot.x += this.vel.x;
-		this.rot.y += this.vel.y;
+		// apply mouse movement
+		this.rotX += this.velX;
+		this.rotY += this.velY;
+		// clamp values
+		this.rotX = this.clamp(this.rotX);
+		this.rotY = this.clamp(this.rotY);
+	};
+
+	MouseControl.prototype.clamp = function(value) {
+		var n = Math.floor(value / 360) * 360;
+		if (value > 0) {
+			value = value - n;
+		} else if (value < 0) {
+			value = 360 + (value - n);
+		}
+		return value;
 	};
 
 	MouseControl.prototype.stop = function(x, y) {
 		this.loc = null;
 		// clear momentum if the user held the last position
 		if (new Date().getTime() - this.lastMove > 200) {
-			this.vel = {
-				x : 0,
-				y : 0
-			};
+			this.velX = this.velY = 0;
 		}
 		this.lastMove = null;
 	};
@@ -73,25 +74,22 @@ define([ './jquery', './transform' ], function($, transform) {
 
 		if (!this.loc) {
 			// apply momentum
-			this.rot.x += this.vel.x;
-			this.rot.y += this.vel.y;
+			this.rotX += this.velX;
+			this.rotY += this.velY;
+			// clamp values
+			this.rotX = this.clamp(this.rotX);
+			this.rotY = this.clamp(this.rotY);
 			// apply damping
-			this.vel.x *= 1 - this.rotationDamping;
-			this.vel.y *= 1 - this.rotationDamping;
+			this.velX *= 1 - this.rotationDamping;
+			this.velY *= 1 - this.rotationDamping;
 		}
 
-		this.element.clearTransform().rotateX(this.rot.x).rotateY(this.rot.y);
+		this.element.clearTransform().rotateX(this.rotX).rotateY(this.rotY);
 	};
 
 	MouseControl.prototype.resetRotation = function() {
-		this.rot = {
-			x : 0,
-			y : 0
-		};
-		this.vel = {
-			x : 0,
-			y : 0
-		};
+		this.rotX = this.rotY = 0;
+		this.velX = this.velY = 0;
 	};
 
 	return MouseControl;
