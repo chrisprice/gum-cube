@@ -5,9 +5,9 @@ define([ './jquery', './transform' ], function($, transform) {
 
 	function MouseControl(element) {
 		this.element = $(element);
-		this.rotationDamping = 0.05;
-		this.rotX = this.rotY = 0;
-		this.velX = this.velY = 0;
+		this.rotationDamping = 0;
+		this.rotX = this.rotY = 340;
+		this.velX = this.velY = 0.1;
 		this.loc = null;
 		this.lastMove = null;
 		this.lastTimestamp = 0;
