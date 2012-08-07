@@ -23,6 +23,18 @@ require(
 						this.options.depth, this.options.frameCount);
 			};
 
+			Controller.prototype.setFrameCount = function() {
+				this.imageCube.setCount(this.options.frameCount);
+			};
+
+			Controller.prototype.togglePreview = function() {
+				if (this.options.preview) {
+					$([ this.webcam.video, this.webcam.canvas ]).prependTo(this.body);
+				} else {
+					$([ this.webcam.video, this.webcam.canvas ]).remove();
+				}
+			};
+
 			Controller.prototype.thresholdCanvas = function() {
 				var webcamImageData = this.webcam.getImageData();
 				var webcamData = webcamImageData.data;
@@ -82,11 +94,12 @@ require(
 				perspective : 1000000,
 				fps : 10,
 				frameCount : 10,
-				scaleXY : 5,
+				scaleXY : 2,
 				scaleZ : 5,
-				width : 128,
-				height : 96,
-				depth : 128
+				width : 256,
+				height : 192,
+				depth : 256,
+				preview : false
 			};
 
 			var body = $('body').preserve3d();
@@ -94,43 +107,52 @@ require(
 			var mouseControl = new MouseControl(container);
 			var cube = $('.cube').preserve3d();
 
-			var gui = new dat.GUI();
-			gui.addColor(options, 'background');
-			gui.add(options, 'perspective', {
-				'1,000,000' : 1000000,
-				'    1,000' : 1000,
-				'      500' : 500,
-				'      100' : 100,
-				'       50' : 50
-			});
-			gui.add(options, 'opacity', 0, 1);
-			gui.add(options, 'scaleXY', 0, 10);
-			gui.add(options, 'scaleZ', {
-				'    1,000' : 1000,
-				'      500' : 500,
-				'      100' : 100,
-				'       50' : 50,
-				'       10' : 10,
-				'        5' : 5,
-				'        1' : 1
-			});
-			gui.add(options, 'renderMovement');
-			gui.add(options, 'renderStatic');
-			gui.add(options, 'renderThreshold', 0, 255);
-			gui.add(mouseControl, 'rotationDamping', 0, 1);
-			gui.add(mouseControl, 'rotX', 0, 360).listen();
-			gui.add(mouseControl, 'rotY', 0, 360).listen();
-			gui.add(options, 'paused');
-			gui.add(options, 'fps', 1, 30);
-			gui.add(options, 'frameCount', 2, 200).onFinishChange(function() {
-				if (window.ctrl) {
-					ctrl.resetDimensions();
-				}
-			});
+			(function() {
+				var gui = new dat.GUI();
+				gui.addColor(options, 'background');
+				var cube = gui.addFolder('Cube');
+				cube.add(options, 'perspective', {
+					'1,000,000' : 1000000,
+					'    1,000' : 1000,
+					'      500' : 500,
+					'      100' : 100,
+					'       50' : 50
+				});
+				cube.add(options, 'opacity', 0, 1);
+				cube.add(options, 'scaleXY', 0, 10);
+				cube.add(options, 'scaleZ', {
+					'    1,000' : 1000,
+					'      500' : 500,
+					'      100' : 100,
+					'       50' : 50,
+					'       10' : 10,
+					'        5' : 5,
+					'        1' : 1
+				});
+				var rot = gui.addFolder('Rotation');
+				rot.add(mouseControl, 'rotationDamping', 0, 1);
+				rot.add(mouseControl, 'rotX', 0, 360).listen();
+				rot.add(mouseControl, 'rotY', 0, 360).listen();
+				var webcam = gui.addFolder('Webcam');
+				webcam.add(options, 'renderMovement');
+				webcam.add(options, 'renderStatic');
+				webcam.add(options, 'renderThreshold', 0, 255);
+				webcam.add(options, 'paused');
+				webcam.add(options, 'fps', 1, 30);
+				webcam.add(options, 'preview').onChange(function() {
+					if (window.ctrl) {
+						ctrl.togglePreview();
+					}
+				});
+				gui.add(options, 'frameCount', 2, 200).onChange(function() {
+					if (window.ctrl) {
+						ctrl.setFrameCount();
+					}
+				});
+			}());
 
 			webcam.create().then(
 					function(webcam) {
-						$('body').append(webcam.video).append(webcam.canvas);
 						var ctrl = new Controller(options, webcam, new ImageCube(cube), body,
 								container, cube);
 						ctrl.resetDimensions();
