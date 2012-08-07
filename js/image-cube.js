@@ -30,7 +30,6 @@ define([ './jquery', './transform' ], function($, css3) {
 		if (count % 2 === 0) {
 			z += delta / 2;
 		}
-		console.log(delta, z);
 		var children = this.container.children();
 
 		for ( var i = 0; i < count; i++) {
