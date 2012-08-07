@@ -1,14 +1,16 @@
 define([ './jquery', './transform' ], function($, transform) {
 
 	var SCALE = 0.5;
+	var NOMINAL_DELTA = 1000 / 60;
 
 	function MouseControl(element) {
 		this.element = $(element);
-		this.rotationDamping = 0.02;
+		this.rotationDamping = 0.05;
 		this.rotX = this.rotY = 0;
 		this.velX = this.velY = 0;
 		this.loc = null;
 		this.lastMove = null;
+		this.lastTimestamp = 0;
 		this.element.origin('50%', '50%').mousedown(function(e) {
 			this.start(e.pageX, e.pageY);
 			e.preventDefault();
@@ -61,6 +63,11 @@ define([ './jquery', './transform' ], function($, transform) {
 	};
 
 	MouseControl.prototype.stop = function(x, y) {
+		if (!this.loc) {
+			// don't do anything if we're not started (it would interfere with
+			// the momentum)
+			return;
+		}
 		this.loc = null;
 		// clear momentum if the user held the last position
 		if (new Date().getTime() - this.lastMove > 200) {
@@ -69,22 +76,25 @@ define([ './jquery', './transform' ], function($, transform) {
 		this.lastMove = null;
 	};
 
-	MouseControl.prototype.onAnimationFrame = function() {
+	MouseControl.prototype.onAnimationFrame = function(timestamp) {
 		requestAnimationFrame(this.onAnimationFrame.bind(this));
 
 		if (!this.loc) {
+			var delta = timestamp - this.lastTimestamp;
 			// apply momentum
-			this.rotX += this.velX;
-			this.rotY += this.velY;
+			this.rotX += this.velX * delta / NOMINAL_DELTA;
+			this.rotY += this.velY * delta / NOMINAL_DELTA;
 			// clamp values
 			this.rotX = this.clamp(this.rotX);
 			this.rotY = this.clamp(this.rotY);
 			// apply damping
 			this.velX *= 1 - this.rotationDamping;
 			this.velY *= 1 - this.rotationDamping;
+
 		}
 
 		this.element.clearTransform().rotateX(this.rotX).rotateY(this.rotY);
+		this.lastTimestamp = timestamp;
 	};
 
 	MouseControl.prototype.resetRotation = function() {
