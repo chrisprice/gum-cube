@@ -1,12 +1,13 @@
-doctype 5
-html(lang="en")
-  head
-    meta(name='viewport',content='width=device-width,initial-scale=1,maximum-scale=1')
-    style
-        body, .container, .cube {
+<!doctype html5>
+<html lang="en">
+  <head>
+    <style>
+        body {
+            background: black;
+        }
+        .container, .cube {
             position: absolute;
             top: 0; right: 0; bottom: 0; left: 0;
-            -webkit-transform-style: preserve-3d;
         }
         .container {
             top: 50%; right: 50%; bottom: 50%; left: 50%;
@@ -29,10 +30,16 @@ html(lang="en")
         footer {
             bottom: 0;
         }
-  body
-    header gUM Cube - 
-        a(href='http://www.github.com/chrisprice',rel='author') Chris Price
-    div(class='container')
-        div(class='cube')
-    footer
-    script(type='text/javascript',src='require.js',data-main='client')
+    </style>
+  </head>
+  <body>
+    <header>gUM Cube - 
+        <a href="http://www.github.com/chrisprice" rel="author">Chris Price</a>
+    </header>
+    <div class="container">
+        <div class="cube"></div>
+    </div>
+    <footer></footer>
+    <script type="text/javascript" src="js/require.js" data-main="js/client"></script>
+  </body>
+</html>
