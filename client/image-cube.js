@@ -1,11 +1,7 @@
 define([ './jquery', './transform' ], function($, css3) {
 
-	function Cube(container, width, height, depth, count) {
-		this.container = $(container).css('position', 'absolute');
-		this.width = width;
-		this.height = height;
-		this.depth = depth;
-		this.setCount(count);
+	function Cube(container) {
+		this.container = container;
 	}
 
 	Cube.prototype.add = function(image) {
@@ -20,11 +16,15 @@ define([ './jquery', './transform' ], function($, css3) {
 		ctx.drawImage(image, 0, 0);
 	};
 
-	Cube.prototype.setCount = function(count) {
+	Cube.prototype.setDimensions = function(width, height, depth, count) {
+		this.width = width;
+		this.height = height;
+
 		this.container.empty();
 		this.children = [];
-		var delta = Math.round(this.depth / count);
-		for ( var z = Math.round(this.depth / 2); z >= -Math.round(this.depth / 2); z -= delta) {
+
+		var delta = Math.round(depth / count);
+		for ( var z = Math.round(depth / 2); z >= -Math.round(depth / 2); z -= delta) {
 			var canvas = $('<canvas/>').width(this.width).height(this.height).attr({
 				width : this.width,
 				height : this.height

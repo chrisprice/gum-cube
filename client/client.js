@@ -1,11 +1,77 @@
 require(
 		[ './webcam', './jquery', './transform', './image-cube', './mouse-control', './dat.gui.min' ],
-		function(webcam, $, transform, Cube, MouseControl) {
-			var errorText = 'Your browser either does not support getUserMedia,'
-					+ ' it is not enabled or you have denied access to the device. '
-					+ '<a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/#toc-enabling">Instructions</a>.';
+		function(webcam, $, transform, ImageCube, MouseControl) {
+			function showError(html) {
+				$('footer').html(html);
+			}
 
-			var frameEmitter = null;
+			function Controller(options, webcam, imageCube, body, container, cube) {
+				this.options = options;
+				this.webcam = webcam;
+				this.imageCube = imageCube;
+				this.body = body;
+				this.container = container;
+				this.cube = cube;
+				this.lastFrameTimestamp = 0;
+			}
+
+			Controller.prototype.resetDimensions = function() {
+				this.webcam.setSize(this.options.width, this.options.height);
+				this.previousImageData = this.webcam.createImageData();
+				this.deltaImageData = this.webcam.createImageData();
+				this.imageCube.setDimensions(this.options.width, this.options.height,
+						this.options.depth, this.options.frameCount);
+			};
+
+			Controller.prototype.thresholdCanvas = function() {
+				var webcamImageData = this.webcam.getImageData();
+				var webcamData = webcamImageData.data;
+				var previousData = this.previousImageData.data;
+				var deltaData = this.deltaImageData.data;
+				for ( var i = 0, l = webcamData.length; i < l; i += 4) {
+					var r = webcamData[i];
+					var g = webcamData[i + 1];
+					var b = webcamData[i + 2];
+					var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+					deltaData[i] = webcamData[i];
+					deltaData[i + 1] = webcamData[i + 1];
+					deltaData[i + 2] = webcamData[i + 2];
+					if (Math.abs(previousData[i] - v) >= this.options.renderThreshold) {
+						deltaData[i + 3] = this.options.renderMovement ? 255 : 0;
+					} else {
+						deltaData[i + 3] = this.options.renderStatic ? 255 : 0;
+					}
+					webcamData[i] = webcamData[i + 1] = webcamData[i + 2] = v;
+				}
+				this.previousImageData = webcamImageData;
+				this.webcam.putImageData(this.deltaImageData);
+			};
+
+			Controller.prototype.onAnimationFrame = function onAnimationFrame(timestamp) {
+				requestAnimationFrame(onAnimationFrame.bind(this));
+
+				this.body.css('background', this.options.background).perspective(
+						this.options.perspective);
+				this.container.css('opacity', this.options.opacity);
+				this.cube.clearTransform().scale(this.options.scaleXY, this.options.scaleXY,
+						this.options.scaleZ);
+
+				if ((timestamp - this.lastFrameTimestamp >= 1000 / this.options.fps)
+						&& !this.options.paused) {
+					this.webcam.snapshot();
+					if (!this.options.renderMovement || !this.options.renderStatic) {
+						this.thresholdCanvas();
+					}
+					this.imageCube.add(this.webcam.canvas);
+					this.lastFrameTimestamp = timestamp;
+				}
+			};
+
+			// TODO: enable/disable
+			/*
+			 * $(webcamControl.video).css({ width : 128, height : 96
+			 * }).appendTo($body);
+			 */
 			var options = {
 				background : '#000',
 				opacity : 0.2,
@@ -13,100 +79,32 @@ require(
 				renderStatic : true,
 				renderThreshold : 5,
 				paused : false,
-				pause : function() {
-					if (frameEmitter.state() === 'pending') {
-						frameEmitter.reject();
-					} else {
-						requestFrames(options.fps);
-					}
-				},
-				perspective : 1000,
+				perspective : 1000000,
 				fps : 10,
 				frameCount : 10,
 				scaleXY : 5,
-				scaleZ : 5
+				scaleZ : 5,
+				width : 128,
+				height : 96,
+				depth : 128
 			};
 
-			var $body = $('body').preserve3d();
-			$body.css('background', options.background);
-			var $cube = $('.cube');
-			var cube = new Cube($cube, 128, 96, 96, options.frameCount);
-			var $container = $('.container');
-			var mouseControl = new MouseControl($container);
-			var webcamControl = null;
-			webcam.create(128, 96).then(function(webcam) {
-				webcamControl = webcam;
-				// TODO: enable/disable
-				$(webcamControl.video).css({
-					width : 128,
-					height : 96
-				}).appendTo($body);
-
-				requestFrames(options.fps);
-			}, function(error) {
-				$('footer').html(errorText);
-			});
-
-			function requestFrames(fps) {
-				if (!webcamControl) {
-					return;
-				}
-
-				var previousImageData = webcamControl.createImageData();
-				var deltaImageData = webcamControl.createImageData();
-				function onFrame() {
-					if (options.paused) {
-						return;
-					}
-					var imageData = webcamControl.getImageData();
-					var data = imageData.data;
-					var previousData = previousImageData.data;
-					var deltaData = deltaImageData.data;
-					for ( var i = 0, l = data.length; i < l; i += 4) {
-						var r = data[i];
-						var g = data[i + 1];
-						var b = data[i + 2];
-						var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-						deltaData[i] = data[i];
-						deltaData[i + 1] = data[i + 1];
-						deltaData[i + 2] = data[i + 2];
-						if (Math.abs(previousData[i] - v) >= options.renderThreshold) {
-							deltaData[i + 3] = options.renderMovement ? 255 : 0;
-						} else {
-							deltaData[i + 3] = options.renderStatic ? 255 : 0;
-						}
-						data[i] = data[i + 1] = data[i + 2] = v;
-					}
-					previousImageData = imageData;
-					webcamControl.putImageData(deltaImageData);
-					cube.add(webcamControl.canvas);
-
-				}
-
-				if (frameEmitter) {
-					frameEmitter.reject();
-				}
-				frameEmitter = webcamControl.requestFrameNotifications(fps, 0).progress(onFrame);
-			}
-
-			function updateMisc() {
-				$body.css('background', options.background).perspective(options.perspective);
-				$container.css('opacity', options.opacity);
-				$cube.clearTransform().scale(options.scaleXY, options.scaleXY, options.scaleZ);
-			}
-			updateMisc();
+			var body = $('body').preserve3d();
+			var container = $('.container').preserve3d();
+			var mouseControl = new MouseControl(container);
+			var cube = $('.cube').preserve3d();
 
 			var gui = new dat.GUI();
-			gui.addColor(options, 'background').onChange(updateMisc);
+			gui.addColor(options, 'background');
 			gui.add(options, 'perspective', {
 				'1,000,000' : 1000000,
 				'    1,000' : 1000,
 				'      500' : 500,
 				'      100' : 100,
 				'       50' : 50
-			}).onChange(updateMisc);
-			gui.add(options, 'opacity', 0, 1).onChange(updateMisc);
-			gui.add(options, 'scaleXY', 0, 10).onChange(updateMisc);
+			});
+			gui.add(options, 'opacity', 0, 1);
+			gui.add(options, 'scaleXY', 0, 10);
 			gui.add(options, 'scaleZ', {
 				'    1,000' : 1000,
 				'      500' : 500,
@@ -115,15 +113,28 @@ require(
 				'       10' : 10,
 				'        5' : 5,
 				'        1' : 1
-			}).onChange(updateMisc);
+			});
 			gui.add(options, 'renderMovement');
 			gui.add(options, 'renderStatic');
 			gui.add(options, 'renderThreshold', 0, 255);
 			gui.add(mouseControl, 'rotationDamping', 0, 1);
-			gui.add(mouseControl, 'resetRotation');
-			gui.add(options, 'pause');
-			gui.add(options, 'fps', 1, 15).onFinishChange(requestFrames);
-			gui.add(options, 'frameCount', 2, 200).onFinishChange(function(value) {
-				cube.setCount(value);
+			gui.add(mouseControl, 'rotX', 0, 360).listen();
+			gui.add(mouseControl, 'rotY', 0, 360).listen();
+			gui.add(options, 'paused');
+			gui.add(options, 'fps', 1, 30);
+			gui.add(options, 'frameCount', 2, 200).onFinishChange(function() {
+				if (window.ctrl) {
+					ctrl.resetDimensions();
+				}
 			});
+
+			webcam.create().then(
+					function(webcam) {
+						$('body').append(webcam.video).append(webcam.canvas);
+						var ctrl = new Controller(options, webcam, new ImageCube(cube), body,
+								container, cube);
+						ctrl.resetDimensions();
+						ctrl.onAnimationFrame(0);
+						window.ctrl = ctrl;
+					}, showError);
 		});
