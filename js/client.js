@@ -28,11 +28,7 @@ require(
 			};
 
 			Controller.prototype.togglePreview = function() {
-				if (this.options.preview) {
-					$([ this.webcam.video, this.webcam.canvas ]).prependTo(this.body);
-				} else {
-					$([ this.webcam.video, this.webcam.canvas ]).remove();
-				}
+				$([ this.webcam.video, this.webcam.canvas ]).toggle(this.options.preview);
 			};
 
 			Controller.prototype.thresholdCanvas = function() {
@@ -79,11 +75,6 @@ require(
 				}
 			};
 
-			// TODO: enable/disable
-			/*
-			 * $(webcamControl.video).css({ width : 128, height : 96
-			 * }).appendTo($body);
-			 */
 			var options = {
 				background : '#000',
 				opacity : 0.2,
@@ -109,8 +100,8 @@ require(
 
 			(function() {
 				var gui = new dat.GUI();
-				gui.addColor(options, 'background');
 				var cube = gui.addFolder('Cube');
+				cube.addColor(options, 'background');
 				cube.add(options, 'perspective', {
 					'1,000,000' : 1000000,
 					'    1,000' : 1000,
@@ -130,7 +121,12 @@ require(
 					'        1' : 1
 				});
 				var rot = gui.addFolder('Rotation');
-				rot.add(mouseControl, 'rotationDamping', 0, 1);
+				rot.add(mouseControl, 'rotationDamping', {
+					'None' : 0,
+					'Low' : 0.01,
+					'High' : 0.05,
+					'Critical' : 1
+				});
 				rot.add(mouseControl, 'rotX', 0, 360).listen();
 				rot.add(mouseControl, 'rotY', 0, 360).listen();
 				var webcam = gui.addFolder('Webcam');
@@ -157,6 +153,8 @@ require(
 								container, cube);
 						ctrl.resetDimensions();
 						ctrl.onAnimationFrame(0);
+						// removing the video from the body stops it
+						$([ webcam.video, webcam.canvas ]).hide().prependTo(body);
 						window.ctrl = ctrl;
 					}, showError);
 		});
