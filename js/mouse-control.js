@@ -91,11 +91,14 @@ define([ './jquery', './transform' ], function($, transform) {
 			// apply damping
 			this.velX *= 1 - this.rotationDamping;
 			this.velY *= 1 - this.rotationDamping;
-
 		}
 
-		this.element.clearTransform().rotateX(this.rotX).rotateY(this.rotY);
+		this.apply();
 		this.lastTimestamp = timestamp;
+	};
+
+	MouseControl.prototype.apply = function() {
+		this.element.clearTransform().rotateX(this.rotX).rotateY(this.rotY);
 	};
 
 	MouseControl.prototype.resetRotation = function() {
