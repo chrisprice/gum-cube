@@ -34,12 +34,19 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	var vShader = $('#shader-vs');
 	var fShader = $('#shader-fs');
 	var attributes = {
-		aColor : {
-			type : "v4",
+		aIndex : {
+			type : "f",
+			value : []
+		}
+	};
+	var uniforms = {
+		uData : {
+			type : "fv1",
 			value : []
 		}
 	};
 	var shaderMaterial = new THREE.ShaderMaterial({
+		uniforms : uniforms,
 		attributes : attributes,
 		vertexShader : vShader.text(),
 		fragmentShader : fShader.text()
@@ -52,7 +59,8 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	var mesh = new THREE.Mesh(plane, shaderMaterial);
 	console.log(mesh.geometry.vertices.length);
 	for ( var i = 0; i < mesh.geometry.vertices.length; i++) {
-		attributes.aColor.value.push(new THREE.Vector4(i % 2 == 1, i % 2 == 0, 0.5, i % 2 == 1));
+		uniforms.uData.value.push(100, 200, 50, 255);
+		attributes.aIndex.value.push(i);
 	}
 
 	// add it to the scene
@@ -94,4 +102,12 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	}
 
 	requestAnimationFrame(loop, renderer.domElement);
+
+	// webcam.create().then(function(webcam) {
+	// setInterval(function() {
+	// webcam.snapshot();
+	// var imageData = webcam.getImageData();
+	//
+	// });
+	// });
 });
