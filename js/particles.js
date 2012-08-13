@@ -18,7 +18,10 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	var scene = new THREE.Scene();
 
 	// create the particle variables
-	var depth = 256, width = 256, segmentsDepth = 16, segmentsWidth = 16;
+	// 16 segments means 17 vertices
+	var VERTEX_WIDTH = 256, VERTEX_HEIGHT = 192;
+	var depth = VERTEX_HEIGHT, width = VERTEX_WIDTH;
+	var segmentsDepth = VERTEX_HEIGHT - 1, segmentsWidth = VERTEX_WIDTH - 1;
 	var plane = new THREE.PlaneGeometry(width, depth, segmentsWidth, segmentsDepth);
 	// var pMaterial = new THREE.ParticleBasicMaterial({
 	// color : 0xFFFFFF,
@@ -35,14 +38,20 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	var fShader = $('#shader-fs');
 	var attributes = {
 		aIndex : {
-			type : "f",
+			type : "v2",
 			value : []
 		}
 	};
+	var texture = new THREE.DataTexture(new Uint8Array(4 * 256 * 192), 256, 192, THREE.RGBAFormat);
 	var uniforms = {
 		uData : {
-			type : "fv1",
-			value : []
+			type : "t",
+			value : 0,
+			texture : texture
+		},
+		uInt : {
+			type : "i",
+			value : 0
 		}
 	};
 	var shaderMaterial = new THREE.ShaderMaterial({
@@ -54,14 +63,16 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	var sphereMaterial = new THREE.MeshLambertMaterial({
 		color : 0xCC0000
 	});
-	var radius = 50, segments = 16, rings = 16; // 16 segments means 17 vertices
+	var radius = 50, segments = 16, rings = 16;
 	var sphere = new THREE.SphereGeometry(radius, segments, rings);
 	var mesh = new THREE.Mesh(plane, shaderMaterial);
 	console.log(mesh.geometry.vertices.length);
 	for ( var i = 0; i < mesh.geometry.vertices.length; i++) {
-		uniforms.uData.value.push(100, 200, 50, 255);
-		attributes.aIndex.value.push(i);
+		attributes.aIndex.value.push(new THREE.Vector2(i % VERTEX_WIDTH / VERTEX_WIDTH, Math
+				.floor(i / VERTEX_WIDTH)
+				/ VERTEX_WIDTH));
 	}
+	console.log(attributes.aIndex.value);
 
 	// add it to the scene
 	scene.add(mesh);
@@ -95,6 +106,15 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	new MouseControl($container).apply = function() {
 		mesh.rotation.set(this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2 * Math.PI, 0);
 	};
+
+	webcam.create().then(function(webcam) {
+		webcam.setSize(256, 192);
+		setInterval(function() {
+			webcam.snapshot();
+			texture.image.data = webcam.getImageData().data;
+			texture.needsUpdate = true;
+		}, 50);
+	});
 
 	function loop() {
 		requestAnimationFrame(loop, renderer.domElement);
