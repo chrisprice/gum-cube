@@ -34,24 +34,23 @@
 <script id="shader-vs" type="x-shader/x-vertex">
 uniform sampler2D uData; 
 uniform int uInt;
-attribute vec2 aIndex;
 varying vec4 vColor;
 
 void main() {
 	float radius = 1.0 / 256.0;
-	vColor = texture2D(uData, aIndex);
+	vColor = texture2D(uData, uv);
 	vec4 color;
-	color += texture2D(uData, vec2(aIndex.x - radius, aIndex.y - radius)) *  0.5;
-	color += texture2D(uData, vec2(aIndex.x         , aIndex.y - radius)) *  1.0;
-	color += texture2D(uData, vec2(aIndex.x + radius, aIndex.y - radius)) *  0.5;
+	color += texture2D(uData, vec2(uv.x - radius, uv.y - radius)) *  0.5;
+	color += texture2D(uData, vec2(uv.x         , uv.y - radius)) *  1.0;
+	color += texture2D(uData, vec2(uv.x + radius, uv.y - radius)) *  0.5;
 
-	color += texture2D(uData, vec2(aIndex.x - radius, aIndex.y         )) *  1.0;
-	color += texture2D(uData, vec2(aIndex.x         , aIndex.y         )) * -6.0;
-	color += texture2D(uData, vec2(aIndex.x + radius, aIndex.y         )) *  1.0;
+	color += texture2D(uData, vec2(uv.x - radius, uv.y         )) *  1.0;
+	color += texture2D(uData, vec2(uv.x         , uv.y         )) * -6.0;
+	color += texture2D(uData, vec2(uv.x + radius, uv.y         )) *  1.0;
 
-	color += texture2D(uData, vec2(aIndex.x - radius, aIndex.y + radius)) *  0.5;
-	color += texture2D(uData, vec2(aIndex.x         , aIndex.y + radius)) *  1.0;
-	color += texture2D(uData, vec2(aIndex.x + radius, aIndex.y + radius)) *  0.5;
+	color += texture2D(uData, vec2(uv.x - radius, uv.y + radius)) *  0.5;
+	color += texture2D(uData, vec2(uv.x         , uv.y + radius)) *  1.0;
+	color += texture2D(uData, vec2(uv.x + radius, uv.y + radius)) *  0.5;
 	vColor.a = abs((color.r + color.g + color.b) / 3.0) * 2.0;
 	gl_Position = projectionMatrix *
 		modelViewMatrix *
