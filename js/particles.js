@@ -19,21 +19,18 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 
 	// create the particle variables
 	// 16 segments means 17 vertices
-	var VERTEX_WIDTH = 256, VERTEX_HEIGHT = 192;
+	var VERTEX_WIDTH = 256, VERTEX_HEIGHT = 192, VERTEX_DEPTH = 100;
 	var depth = VERTEX_HEIGHT, width = VERTEX_WIDTH;
-	var segmentsDepth = VERTEX_HEIGHT - 1, segmentsWidth = VERTEX_WIDTH - 1;
-	var plane = new THREE.PlaneGeometry(width, depth, segmentsWidth, segmentsDepth);
-	// var pMaterial = new THREE.ParticleBasicMaterial({
-	// color : 0xFFFFFF,
-	// size : 1
-	// });
-	// var pMaterial = new THREE.ParticleBasicMaterial({
-	// color : 0xFFFFFF,
-	// size : 20,
-	// map : THREE.ImageUtils.loadTexture("images/particle.png"),
-	// blending : THREE.AdditiveBlending,
-	// transparent : true
-	// });
+	var segmentsDepth = VERTEX_HEIGHT - 1, segmentsWidth = VERTEX_WIDTH - 1, segmentsHeight = 5;
+	var geometry = new THREE.Geometry();
+	for ( var i = 0; i < segmentsHeight; i++) {
+		var plane = new THREE.PlaneGeometry(width, depth, segmentsWidth, segmentsDepth);
+		var mesh = new THREE.Mesh(plane);
+		mesh.translateY(i * 10);
+		THREE.GeometryUtils.merge(geometry, mesh);
+		console.log(geometry.vertices.length, mesh.matrix);
+	}
+
 	var vShader = $('#shader-vs');
 	var fShader = $('#shader-fs');
 	var attributes = {
@@ -65,17 +62,17 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	});
 	var radius = 50, segments = 16, rings = 16;
 	var sphere = new THREE.SphereGeometry(radius, segments, rings);
-	var mesh = new THREE.Mesh(plane, shaderMaterial);
-	console.log(mesh.geometry.vertices.length);
-	for ( var i = 0; i < mesh.geometry.vertices.length; i++) {
-		attributes.aIndex.value.push(new THREE.Vector2(i % VERTEX_WIDTH / VERTEX_WIDTH, Math
-				.floor(i / VERTEX_WIDTH)
+	var particleSystem = new THREE.ParticleSystem(geometry, shaderMaterial);
+	// var mesh = new THREE.Mesh(plane, shaderMaterial);
+	for ( var i = 0; i < geometry.vertices.length; i++) {
+		var j = i % plane.vertices.length;
+		attributes.aIndex.value.push(new THREE.Vector2(j % VERTEX_WIDTH / VERTEX_WIDTH, Math
+				.floor(j / VERTEX_WIDTH)
 				/ VERTEX_WIDTH));
 	}
-	console.log(attributes.aIndex.value);
 
 	// add it to the scene
-	scene.add(mesh);
+	scene.add(particleSystem);
 
 	// create a point light
 	var pointLight = new THREE.PointLight(0xFFFFFF);
@@ -104,11 +101,12 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 	$container.append(renderer.domElement);
 
 	new MouseControl($container).apply = function() {
-		mesh.rotation.set(this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2 * Math.PI, 0);
+		particleSystem.rotation
+				.set(this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2 * Math.PI, 0);
 	};
 
 	webcam.create().then(function(webcam) {
-		webcam.setSize(256, 192);
+		webcam.setSize(256, 256);
 		setInterval(function() {
 			webcam.snapshot();
 			texture.image.data = webcam.getImageData().data;

@@ -39,6 +39,7 @@ varying vec4 vColor;
 
 void main() {
 	float radius = 1.0 / 256.0;
+	vColor = texture2D(uData, aIndex);
 	vec4 color;
 	color += texture2D(uData, vec2(aIndex.x - radius, aIndex.y - radius)) *  0.5;
 	color += texture2D(uData, vec2(aIndex.x         , aIndex.y - radius)) *  1.0;
@@ -51,11 +52,11 @@ void main() {
 	color += texture2D(uData, vec2(aIndex.x - radius, aIndex.y + radius)) *  0.5;
 	color += texture2D(uData, vec2(aIndex.x         , aIndex.y + radius)) *  1.0;
 	color += texture2D(uData, vec2(aIndex.x + radius, aIndex.y + radius)) *  0.5;
-	vColor.r = vColor.g = vColor.b =  abs((color.r + color.g + color.b) / 3.0);
-	vColor.a = 1.0;
+	vColor.a = abs((color.r + color.g + color.b) / 3.0) * 2.0;
 	gl_Position = projectionMatrix *
 		modelViewMatrix *
 		vec4(position,1.0);
+	gl_PointSize = 1.0;
 }
 </script>
 <script id="shader-fs" type="x-shader/x-fragment">
