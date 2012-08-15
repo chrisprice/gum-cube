@@ -2,8 +2,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 
 	// set the scene size
 	var WIDTH = 800, HEIGHT = 600;
-
-	var VIEW_ANGLE = 45, ASPECT = WIDTH / HEIGHT, NEAR = 0.1, FAR = 10000;
+	var DEPTH = 100000;
+	var VIEW_ANGLE = 0.2, ASPECT = WIDTH / HEIGHT, NEAR = DEPTH - 500, FAR = DEPTH + 500;
 
 	var VERTEX_SHADER = [
 			"varying vec2 vUv;",
@@ -46,7 +46,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		this.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
 		// the camera starts at 0,0,0
 		// so pull it back
-		this.camera.position.z = 300;
+		this.camera.position.z = DEPTH;
 		// add the camera to the scene
 		this.scene.add(this.camera);
 
