@@ -122,6 +122,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 					transparent : true
 				});
 				plane = new THREE.Mesh(this.createPlaneGeometry(), shaderMaterial);
+				plane.doubleSided = true;
 				this.cube.add(plane);
 			}
 			plane.position.z = z;
