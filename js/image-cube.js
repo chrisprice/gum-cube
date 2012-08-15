@@ -6,37 +6,33 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	var VIEW_ANGLE = 45, ASPECT = WIDTH / HEIGHT, NEAR = 0.1, FAR = 10000;
 
 	var VERTEX_SHADER = [
-			"uniform sampler2D uData;",
-			"attribute vec2 aUV;",
-			"varying vec4 vColor;",
-			"varying float vFilteredValue;",
+			"varying vec2 vUv;",
 			"void main() {",
-			"	float radius = 1.0 / 256.0;",
-			"	vec4 color;",
-			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y - radius)) *  0.5;",
-			"	color += texture2D(uData, vec2(aUV.x         , aUV.y - radius)) *  1.0;",
-			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y - radius)) *  0.5;",
-			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y         )) *  1.0;",
-			"	color += texture2D(uData, vec2(aUV.x         , aUV.y         )) * -6.0;",
-			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y         )) *  1.0;",
-			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y + radius)) *  0.5;",
-			"	color += texture2D(uData, vec2(aUV.x         , aUV.y + radius)) *  1.0;",
-			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y + radius)) *  0.5;",
-			"	vFilteredValue = abs((color.r + color.g + color.b) / 3.0) * 5.0;",
-			"	vColor = texture2D(uData, aUV);",
+			"	vUv = uv;",
 			"	gl_Position = projectionMatrix *",
 			"		modelViewMatrix *",
 			"		vec4(position,1.0);",
-			"	gl_PointSize = 1.0;",
 			"}",
 	].join("\n");
 
 	var FRAGMENT_SHADER = [
-			"varying vec4 vColor;",
-			"varying float vFilteredValue;",
+			"uniform sampler2D uData;",
+			"varying vec2 vUv;",
 			"void main(void) {",
-			"	if (vFilteredValue < 0.9) discard;",
-			"	gl_FragColor = vColor;",
+			"	float radius = 1.0 / 256.0;",
+			"//	vec4 color;",
+			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y - radius)) *  0.5;",
+			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y - radius)) *  1.0;",
+			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y - radius)) *  0.5;",
+			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y         )) *  1.0;",
+			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y         )) * -6.0;",
+			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y         )) *  1.0;",
+			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y + radius)) *  0.5;",
+			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y + radius)) *  1.0;",
+			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y + radius)) *  0.5;",
+			"//	if (abs((color.r + color.g + color.b) / 3.0) < 0.3) discard;",
+			"	gl_FragColor = texture2D(uData, vUv);",
+			"	gl_FragColor.a = 0.5;",
 			"}",
 	].join("\n");
 
@@ -109,7 +105,6 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		count = Math.round(count);
 		var delta = -this.depth / count;
 		var z = (this.depth + delta) / 2;
-		var textureMap = this.createTextureMap();
 		for ( var i = 0; i < count; i++) {
 			var plane = this.cube.children[i];
 			if (!plane) {
@@ -121,12 +116,6 @@ define([ './jquery', './Three' ], function($, THREE__) {
 							value : 0,
 							texture : texture
 						},
-					},
-					attributes : {
-						aUV : {
-							type : "v2",
-							value : textureMap
-						}
 					},
 					vertexShader : VERTEX_SHADER,
 					fragmentShader : FRAGMENT_SHADER
@@ -147,24 +136,11 @@ define([ './jquery', './Three' ], function($, THREE__) {
 
 	Cube.prototype.createPlaneGeometry = function() {
 		var geo = new THREE.Geometry();
-		var offsetX = -this.width / 2;
-		var offsetY = -this.height / 2;
-		for ( var y = 0; y < this.height; y++) {
-			for ( var x = 0; x < this.width; x++) {
-				geo.vertices.push(new THREE.Vector3(offsetX + x, offsetY + y, 0));
-			}
-		}
+		var plane = new THREE.PlaneGeometry(this.width, this.height, 1, 1);
+		var obj = new THREE.Mesh(plane);
+		obj.rotation.x = Math.PI / 2;
+		THREE.GeometryUtils.merge(geo, obj);
 		return geo;
-	};
-
-	Cube.prototype.createTextureMap = function() {
-		var textureMap = [];
-		for ( var y = 0; y < this.height; y++) {
-			for ( var x = 0; x < this.width; x++) {
-				textureMap.push(new THREE.Vector2(x / this.width, 1 - (y / this.height), 0));
-			}
-		}
-		return textureMap;
 	};
 
 	Cube.prototype.onAnimationFrame = function() {
