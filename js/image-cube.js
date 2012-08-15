@@ -109,7 +109,6 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		count = Math.round(count);
 		var delta = -this.depth / count;
 		var z = (this.depth + delta) / 2;
-		var geometry = this.createPlaneGeometry();
 		var textureMap = this.createTextureMap();
 		for ( var i = 0; i < count; i++) {
 			var plane = this.cube.children[i];
@@ -132,14 +131,17 @@ define([ './jquery', './Three' ], function($, THREE__) {
 					vertexShader : VERTEX_SHADER,
 					fragmentShader : FRAGMENT_SHADER
 				});
-				plane = new THREE.ParticleSystem(geometry, shaderMaterial);
+				plane = new THREE.Mesh(this.createPlaneGeometry(), shaderMaterial);
 				this.cube.add(plane);
 			}
 			plane.position.z = z;
 			z += delta;
 		}
 		for (i = this.cube.children.length - 1; i >= count; i--) {
-			this.cube.remove(this.cube.children[i]);
+			var plane = this.cube.children[i];
+			this.cube.remove(plane);
+			this.renderer.deallocateTexture(plane.material.uniforms.uData.texture);
+			this.renderer.deallocateObject(plane);
 		}
 	};
 
