@@ -118,7 +118,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 						},
 					},
 					vertexShader : VERTEX_SHADER,
-					fragmentShader : FRAGMENT_SHADER
+					fragmentShader : FRAGMENT_SHADER,
+					transparent : true
 				});
 				plane = new THREE.Mesh(this.createPlaneGeometry(), shaderMaterial);
 				this.cube.add(plane);
