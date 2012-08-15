@@ -101,7 +101,7 @@ require(
 			var imageCube = new ImageCube(cube);
 			var mouseControl = new MouseControl(container);
 			mouseControl.apply = function() {
-				imageCube.cube.rotation.set(this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2
+				imageCube.cube.rotation.set(-this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2
 						* Math.PI, 0);
 			};
 
