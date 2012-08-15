@@ -9,9 +9,9 @@ define([ './jquery', './Three' ], function($, THREE__) {
 			"uniform sampler2D uData;",
 			"attribute vec2 aUV;",
 			"varying vec4 vColor;",
+			"varying float vFilteredValue;",
 			"void main() {",
 			"	float radius = 1.0 / 256.0;",
-			"	vColor = texture2D(uData, aUV);",
 			"	vec4 color;",
 			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y - radius)) *  0.5;",
 			"	color += texture2D(uData, vec2(aUV.x         , aUV.y - radius)) *  1.0;",
@@ -22,7 +22,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y + radius)) *  0.5;",
 			"	color += texture2D(uData, vec2(aUV.x         , aUV.y + radius)) *  1.0;",
 			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y + radius)) *  0.5;",
-			"	vColor.a = abs((color.r + color.g + color.b) / 3.0) * 2.0;",
+			"	vFilteredValue = abs((color.r + color.g + color.b) / 3.0) * 5.0;",
+			"	vColor = texture2D(uData, aUV);",
 			"	gl_Position = projectionMatrix *",
 			"		modelViewMatrix *",
 			"		vec4(position,1.0);",
@@ -32,7 +33,9 @@ define([ './jquery', './Three' ], function($, THREE__) {
 
 	var FRAGMENT_SHADER = [
 			"varying vec4 vColor;",
+			"varying float vFilteredValue;",
 			"void main(void) {",
+			"	if (vFilteredValue < 0.9) discard;",
 			"	gl_FragColor = vColor;",
 			"}",
 	].join("\n");
@@ -58,8 +61,24 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		// attach the render-supplied DOM element
 		this.container.append(this.renderer.domElement);
 
-		requestAnimationFrame(this.onAnimationFrame.bind(this), this.renderer.domElement);
+		$(document).keydown(function(e) {
+			if (e.keyCode == 27) {
+				this.toggleAnimation();
+			}
+		}.bind(this));
+
+		this.toggleAnimation();
 	}
+
+	Cube.prototype.toggleAnimation = function() {
+		if (this.requestId) {
+			cancelAnimationFrame(this.requestId);
+			this.requestId = null;
+		} else {
+			this.requestId = requestAnimationFrame(this.onAnimationFrame.bind(this),
+					this.renderer.domElement);
+		}
+	};
 
 	Cube.prototype.add = function(imageData) {
 		// grab a reference to the last texture
@@ -87,6 +106,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	};
 
 	Cube.prototype.setCount = function(count) {
+		count = Math.round(count);
 		var delta = -this.depth / count;
 		var z = this.depth / 2;
 		if (count % 2 === 0) {
@@ -149,7 +169,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	};
 
 	Cube.prototype.onAnimationFrame = function() {
-		requestAnimationFrame(this.onAnimationFrame.bind(this), this.renderer.domElement);
+		this.requestId = null;
+		this.toggleAnimation();
 		this.renderer.render(this.scene, this.camera);
 	};
 
