@@ -19,7 +19,7 @@ require([ './webcam', './jquery', './mouse-control', './transform', './Three' ],
 
 	// create the particle variables
 	// 16 segments means 17 vertices
-	var VERTEX_WIDTH = 256, VERTEX_HEIGHT = 192, VERTEX_DEPTH = 100;
+	var VERTEX_WIDTH = 256, VERTEX_HEIGHT = 192, VERTEX_DEPTH = 256;
 	var depth = VERTEX_HEIGHT, width = VERTEX_WIDTH;
 	var segmentsDepth = VERTEX_HEIGHT - 1, segmentsWidth = VERTEX_WIDTH - 1, segmentsHeight = 3;
 	var geometry = new THREE.Geometry();

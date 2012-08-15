@@ -1,20 +1,73 @@
-define([ './jquery', './transform' ], function($, css3) {
+define([ './jquery', './Three' ], function($, THREE__) {
+
+	// set the scene size
+	var WIDTH = 800, HEIGHT = 600;
+
+	var VIEW_ANGLE = 45, ASPECT = WIDTH / HEIGHT, NEAR = 0.1, FAR = 10000;
+
+	var VERTEX_SHADER = [
+			"uniform sampler2D uData;",
+			"attribute vec2 aUV;",
+			"varying vec4 vColor;",
+			"void main() {",
+			"	float radius = 1.0 / 256.0;",
+			"	vColor = texture2D(uData, aUV);",
+			"	vec4 color;",
+			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y - radius)) *  0.5;",
+			"	color += texture2D(uData, vec2(aUV.x         , aUV.y - radius)) *  1.0;",
+			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y - radius)) *  0.5;",
+			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y         )) *  1.0;",
+			"	color += texture2D(uData, vec2(aUV.x         , aUV.y         )) * -6.0;",
+			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y         )) *  1.0;",
+			"	color += texture2D(uData, vec2(aUV.x - radius, aUV.y + radius)) *  0.5;",
+			"	color += texture2D(uData, vec2(aUV.x         , aUV.y + radius)) *  1.0;",
+			"	color += texture2D(uData, vec2(aUV.x + radius, aUV.y + radius)) *  0.5;",
+			"	vColor.a = abs((color.r + color.g + color.b) / 3.0) * 2.0;",
+			"	gl_Position = projectionMatrix *",
+			"		modelViewMatrix *",
+			"		vec4(position,1.0);",
+			"	gl_PointSize = 1.0;",
+			"}",
+	].join("\n");
+
+	var FRAGMENT_SHADER = [
+			"varying vec4 vColor;",
+			"void main(void) {",
+			"	gl_FragColor = vColor;",
+			"}",
+	].join("\n");
 
 	function Cube(container) {
 		this.container = container;
+		this.scene = new THREE.Scene();
+
+		this.cube = new THREE.Object3D();
+		this.scene.add(this.cube);
+
+		this.camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+		// the camera starts at 0,0,0
+		// so pull it back
+		this.camera.position.z = 300;
+		// add the camera to the scene
+		this.scene.add(this.camera);
+
+		// create a WebGL renderer, camera
+		this.renderer = new THREE.WebGLRenderer();
+		// start the renderer
+		this.renderer.setSize(WIDTH, HEIGHT);
+		// attach the render-supplied DOM element
+		this.container.append(this.renderer.domElement);
+
+		requestAnimationFrame(this.onAnimationFrame.bind(this), this.renderer.domElement);
 	}
 
-	Cube.prototype.add = function(image) {
-		var children = this.container.children();
-		var ctx;
-		for ( var i = children.length - 1; i > 0; i--) {
-			ctx = children[i].getContext('2d');
-			ctx.clearRect(0, 0, this.width, this.height);
-			ctx.drawImage(children[i - 1], 0, 0);
+	Cube.prototype.add = function(imageData) {
+		for ( var i = 0; i < this.cube.children.length; i++) {
+			var plane = this.cube.children[i];
+			var texture = plane.material.uniforms.uData.texture;
+			texture.image.data = imageData.data;
+			texture.needsUpdate = true;
 		}
-		ctx = children[0].getContext('2d');
-		ctx.clearRect(0, 0, this.width, this.height);
-		ctx.drawImage(image, 0, 0);
 	};
 
 	Cube.prototype.setDimensions = function(width, height, depth, count) {
@@ -30,28 +83,63 @@ define([ './jquery', './transform' ], function($, css3) {
 		if (count % 2 === 0) {
 			z += delta / 2;
 		}
-		var children = this.container.children();
-
 		for ( var i = 0; i < count; i++) {
-			var canvas = children.eq(i);
-			if (!canvas.length) {
-				canvas = $('<canvas/>').width(this.width).height(this.height).attr({
-					width : this.width,
-					height : this.height
-				}).css({
-					position : 'absolute',
-					top : '50%',
-					left : '50%',
-					marginTop : -this.height / 2,
-					marginLeft : -this.width / 2
-				}).appendTo(this.container);
+			var plane = this.cube.children[i];
+			if (!plane) {
+				var texture = new THREE.DataTexture([], this.width, this.height, THREE.RGBAFormat);
+				var shaderMaterial = new THREE.ShaderMaterial({
+					uniforms : {
+						uData : {
+							type : "t",
+							value : 0,
+							texture : texture
+						},
+					},
+					attributes : {
+						aUV : {
+							type : "v2",
+							value : this.createTextureMap()
+						}
+					},
+					vertexShader : VERTEX_SHADER,
+					fragmentShader : FRAGMENT_SHADER
+				});
+				plane = new THREE.ParticleSystem(this.createPlaneGeometry(), shaderMaterial);
+				this.cube.add(plane);
 			}
-			canvas.clearTransform().translate(0, 0, z);
+			plane.position.z = z;
 			z += delta;
 		}
-		for (i = count; i < children.length; i++) {
-			children.eq(i).remove();
+		for (i = count; i < this.cube.children.length; i++) {
+			this.cube.remove(this.cube.children[i]);
 		}
+	};
+
+	Cube.prototype.createPlaneGeometry = function() {
+		var geo = new THREE.Geometry();
+		var offsetX = -this.width / 2;
+		var offsetY = -this.height / 2;
+		for ( var y = 0; y < this.height; y++) {
+			for ( var x = 0; x < this.width; x++) {
+				geo.vertices.push(new THREE.Vector3(offsetX + x, offsetY + y, 0));
+			}
+		}
+		return geo;
+	};
+
+	Cube.prototype.createTextureMap = function() {
+		var textureMap = [];
+		for ( var y = 0; y < this.height; y++) {
+			for ( var x = 0; x < this.width; x++) {
+				textureMap.push(new THREE.Vector2(x / this.width, 1 - (y / this.height), 0));
+			}
+		}
+		return textureMap;
+	};
+
+	Cube.prototype.onAnimationFrame = function() {
+		requestAnimationFrame(this.onAnimationFrame.bind(this), this.renderer.domElement);
+		this.renderer.render(this.scene, this.camera);
 	};
 
 	return Cube;

@@ -31,40 +31,6 @@
             bottom: 0;
         }
     </style>
-<script id="shader-vs" type="x-shader/x-vertex">
-uniform sampler2D uData; 
-uniform int uInt;
-varying vec4 vColor;
-
-void main() {
-	float radius = 1.0 / 256.0;
-	vColor = texture2D(uData, uv);
-	vec4 color;
-	color += texture2D(uData, vec2(uv.x - radius, uv.y - radius)) *  0.5;
-	color += texture2D(uData, vec2(uv.x         , uv.y - radius)) *  1.0;
-	color += texture2D(uData, vec2(uv.x + radius, uv.y - radius)) *  0.5;
-
-	color += texture2D(uData, vec2(uv.x - radius, uv.y         )) *  1.0;
-	color += texture2D(uData, vec2(uv.x         , uv.y         )) * -6.0;
-	color += texture2D(uData, vec2(uv.x + radius, uv.y         )) *  1.0;
-
-	color += texture2D(uData, vec2(uv.x - radius, uv.y + radius)) *  0.5;
-	color += texture2D(uData, vec2(uv.x         , uv.y + radius)) *  1.0;
-	color += texture2D(uData, vec2(uv.x + radius, uv.y + radius)) *  0.5;
-	vColor.a = abs((color.r + color.g + color.b) / 3.0) * 2.0;
-	gl_Position = projectionMatrix *
-		modelViewMatrix *
-		vec4(position,1.0);
-	gl_PointSize = 1.0;
-}
-</script>
-<script id="shader-fs" type="x-shader/x-fragment">
-varying vec4 vColor;
-
-void main(void) {
-	gl_FragColor = vColor;
-}
-</script> 
   </head>
   <body>
     <header>gum-cube - 
@@ -75,6 +41,6 @@ void main(void) {
         <div class="cube"></div>
     </div>
     <footer></footer>
-    <script type="text/javascript" src="js/require.js" data-main="js/particles"></script>
+    <script type="text/javascript" src="js/require.js" data-main="js/client"></script>
   </body>
 </html>

@@ -58,11 +58,13 @@ require(
 			Controller.prototype.onAnimationFrame = function onAnimationFrame(timestamp) {
 				requestAnimationFrame(onAnimationFrame.bind(this));
 
-				this.body.css('background', this.options.background).perspective(
-						this.options.perspective);
-				this.container.css('opacity', this.options.opacity);
-				this.cube.clearTransform().scale(this.options.scaleXY, this.options.scaleXY,
-						this.options.scaleZ);
+				this.body.css('background', this.options.background);
+				// .perspective(
+				// this.options.perspective);
+				// this.container.css('opacity', this.options.opacity);
+				// this.cube.clearTransform().scale(this.options.scaleXY,
+				// this.options.scaleXY,
+				// this.options.scaleZ);
 
 				if ((timestamp - this.lastFrameTimestamp >= 1000 / this.options.fps)
 						&& !this.options.paused) {
@@ -70,7 +72,7 @@ require(
 					if (!this.options.renderMovement || !this.options.renderStatic) {
 						this.thresholdCanvas();
 					}
-					this.imageCube.add(this.webcam.canvas);
+					this.imageCube.add(this.webcam.getImageData());
 					this.lastFrameTimestamp = timestamp;
 				}
 			};
@@ -79,12 +81,12 @@ require(
 				background : '#000',
 				opacity : 0.2,
 				renderMovement : true,
-				renderStatic : false,
+				renderStatic : true,
 				renderThreshold : 10,
 				paused : false,
 				perspective : 1000000,
 				fps : 10,
-				frameCount : 100,
+				frameCount : 3,
 				scaleXY : 2,
 				scaleZ : 5,
 				width : 256,
@@ -95,8 +97,13 @@ require(
 
 			var body = $('body').preserve3d();
 			var container = $('.container').preserve3d();
-			var mouseControl = new MouseControl(container);
 			var cube = $('.cube').preserve3d();
+			var imageCube = new ImageCube(cube);
+			var mouseControl = new MouseControl(container);
+			mouseControl.apply = function() {
+				imageCube.cube.rotation.set(this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2
+						* Math.PI, 0);
+			};
 
 			(function() {
 				var gui = new dat.GUI();
@@ -147,14 +154,12 @@ require(
 				});
 			}());
 
-			webcam.create().then(
-					function(webcam) {
-						var ctrl = new Controller(options, webcam, new ImageCube(cube), body,
-								container, cube);
-						ctrl.resetDimensions();
-						ctrl.onAnimationFrame(0);
-						// removing the video from the body stops it
-						$([ webcam.video, webcam.canvas ]).hide().prependTo(body);
-						window.ctrl = ctrl;
-					}, showError);
+			webcam.create().then(function(webcam) {
+				var ctrl = new Controller(options, webcam, imageCube, body, container, cube);
+				ctrl.resetDimensions();
+				ctrl.onAnimationFrame(0);
+				// removing the video from the body stops it
+				$([ webcam.video, webcam.canvas ]).hide().prependTo(body);
+				window.ctrl = ctrl;
+			}, showError);
 		});
