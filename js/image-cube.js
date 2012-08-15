@@ -26,10 +26,7 @@ define([ './jquery', './transform' ], function($, css3) {
 
 	Cube.prototype.setCount = function(count) {
 		var delta = -this.depth / count;
-		var z = this.depth / 2;
-		if (count % 2 === 0) {
-			z += delta / 2;
-		}
+		var z = (this.depth + delta) / 2;
 		var children = this.container.children();
 
 		for ( var i = 0; i < count; i++) {
