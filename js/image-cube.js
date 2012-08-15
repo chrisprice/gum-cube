@@ -108,10 +108,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	Cube.prototype.setCount = function(count) {
 		count = Math.round(count);
 		var delta = -this.depth / count;
-		var z = this.depth / 2;
-		if (count % 2 === 0) {
-			z += delta / 2;
-		}
+		var z = (this.depth + delta) / 2;
 		var geometry = this.createPlaneGeometry();
 		var textureMap = this.createTextureMap();
 		for ( var i = 0; i < count; i++) {
@@ -141,7 +138,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 			plane.position.z = z;
 			z += delta;
 		}
-		for (i = count; i < this.cube.children.length; i++) {
+		for (i = this.cube.children.length - 1; i >= count; i--) {
 			this.cube.remove(this.cube.children[i]);
 		}
 	};
