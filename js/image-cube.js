@@ -83,6 +83,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		if (count % 2 === 0) {
 			z += delta / 2;
 		}
+		var geometry = this.createPlaneGeometry();
+		var textureMap = this.createTextureMap();
 		for ( var i = 0; i < count; i++) {
 			var plane = this.cube.children[i];
 			if (!plane) {
@@ -98,13 +100,13 @@ define([ './jquery', './Three' ], function($, THREE__) {
 					attributes : {
 						aUV : {
 							type : "v2",
-							value : this.createTextureMap()
+							value : textureMap
 						}
 					},
 					vertexShader : VERTEX_SHADER,
 					fragmentShader : FRAGMENT_SHADER
 				});
-				plane = new THREE.ParticleSystem(this.createPlaneGeometry(), shaderMaterial);
+				plane = new THREE.ParticleSystem(geometry, shaderMaterial);
 				this.cube.add(plane);
 			}
 			plane.position.z = z;
