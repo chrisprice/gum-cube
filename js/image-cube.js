@@ -62,12 +62,21 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	}
 
 	Cube.prototype.add = function(imageData) {
-		for ( var i = 0; i < this.cube.children.length; i++) {
-			var plane = this.cube.children[i];
-			var texture = plane.material.uniforms.uData.texture;
-			texture.image.data = imageData.data;
-			texture.needsUpdate = true;
+		// grab a reference to the last texture
+		var lastChild = this.cube.children[this.cube.children.length - 1];
+		var recycledTexture = lastChild.material.uniforms.uData.texture;
+		// loop backwards through the children rippling the texture
+		for ( var i = this.cube.children.length - 1; i > 0; i--) {
+			var child = this.cube.children[i];
+			var previousChild = this.cube.children[i - 1];
+			child.material.uniforms.uData.texture = previousChild.material.uniforms.uData.texture;
 		}
+		// update the recycled texture
+		recycledTexture.image.data = imageData.data;
+		recycledTexture.needsUpdate = true;
+		// and slap it on the front
+		var firstChild = this.cube.children[0];
+		firstChild.material.uniforms.uData.texture = recycledTexture;
 	};
 
 	Cube.prototype.setDimensions = function(width, height, depth, count) {
