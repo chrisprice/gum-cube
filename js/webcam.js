@@ -35,7 +35,7 @@ define(
 				return new $.Deferred(function(deferred) {
 					var getUserMedia = navigator.webkitGetUserMedia || navigator.getUserMedia;
 					if (!getUserMedia) {
-						deferred.reject("getUserMedia unsupported");
+						deferred.reject(ERROR_TEXT);
 					} else {
 						getUserMedia.call(navigator, options, function onSuccess(stream) {
 							deferred.resolve(stream);
