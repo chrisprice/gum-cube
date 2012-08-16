@@ -92,6 +92,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		// and slap it on the front
 		var firstChild = this.cube.children[0];
 		firstChild.material.uniforms.uData.texture = recycledTexture;
+		this.needsUpdate = true;
 	};
 
 	Cube.prototype.setDimensions = function(width, height, depth, count) {
@@ -148,7 +149,10 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	Cube.prototype.onAnimationFrame = function() {
 		this.requestId = null;
 		this.toggleAnimation();
-		this.renderer.render(this.scene, this.camera);
+		if (this.needsUpdate) {
+			this.renderer.render(this.scene, this.camera);
+			this.needsUpdate = false;
+		}
 	};
 
 	return Cube;
