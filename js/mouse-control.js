@@ -63,6 +63,13 @@ define([ './jquery', './transform' ], function($, transform) {
 		return value;
 	};
 
+	MouseControl.prototype.epsilon = function(value) {
+		if (value < 0.01) {
+			return 0;
+		}
+		return value;
+	};
+
 	MouseControl.prototype.stop = function(x, y) {
 		if (!this.loc) {
 			// don't do anything if we're not started (it would interfere with
@@ -88,12 +95,18 @@ define([ './jquery', './transform' ], function($, transform) {
 			// clamp values
 			this.rotX = this.clamp(this.rotX);
 			this.rotY = this.clamp(this.rotY);
+		}
+
+		if (this.velX || this.velY) {
 			// apply damping
 			this.velX *= 1 - this.rotationDamping;
 			this.velY *= 1 - this.rotationDamping;
+			// ensure rotation stops
+			this.velX = this.epsilon(this.velX);
+			this.velY = this.epsilon(this.velY);
+			this.apply();
 		}
 
-		this.apply();
 		this.lastTimestamp = timestamp;
 	};
 

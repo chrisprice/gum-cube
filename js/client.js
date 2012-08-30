@@ -100,18 +100,10 @@ require(
 			var cube = $('.cube').preserve3d();
 			var imageCube = new ImageCube(cube);
 			var mouseControl = new MouseControl(container);
-			mouseControl.previousRotX = 0;
-			mouseControl.previousRotY = 0;
 			mouseControl.apply = function() {
-				var deltaX = Math.abs(this.previousRotX - this.rotX);
-				var deltaY = Math.abs(this.previousRotY - this.rotY);
-				if (Math.max(deltaX, deltaY) >= 0.1) {
-					imageCube.cube.rotation.set(-this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2
-							* Math.PI, 0);
-					this.previousRotX = this.rotX;
-					this.previousRotY = this.rotY;
-					imageCube.needsUpdate = true;
-				}
+				imageCube.cube.rotation.set(-this.rotX / 360 * 2 * Math.PI, this.rotY / 360 * 2
+						* Math.PI, 0);
+				imageCube.needsUpdate = true;
 			};
 
 			(function() {
