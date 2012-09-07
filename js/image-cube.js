@@ -16,23 +16,19 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	].join("\n");
 
 	var FRAGMENT_SHADER = [
-			"uniform sampler2D uData;",
+			"uniform float uOpacity;",
+			"uniform float uThreshold;",
+			"uniform sampler2D uTexture;",
+			"uniform sampler2D uTexture2;",
 			"varying vec2 vUv;",
 			"void main(void) {",
-			"	float radius = 1.0 / 256.0;",
-			"//	vec4 color;",
-			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y - radius)) *  0.5;",
-			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y - radius)) *  1.0;",
-			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y - radius)) *  0.5;",
-			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y         )) *  1.0;",
-			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y         )) * -6.0;",
-			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y         )) *  1.0;",
-			"//	color += texture2D(uData, vec2(vUv.x - radius, vUv.y + radius)) *  0.5;",
-			"//	color += texture2D(uData, vec2(vUv.x         , vUv.y + radius)) *  1.0;",
-			"//	color += texture2D(uData, vec2(vUv.x + radius, vUv.y + radius)) *  0.5;",
-			"//	if (abs((color.r + color.g + color.b) / 3.0) < 0.3) discard;",
-			"	gl_FragColor = texture2D(uData, vUv);",
-			"	gl_FragColor.a = 0.5;",
+			"	vec4 color = texture2D(uTexture, vUv);",
+			"	vec4 old = texture2D(uTexture2, vUv);",
+			"	float delta = (abs(old.r - color.r) + abs(old.g - color.g)",
+			"		+ abs(old.b - color.b))/3.0;",
+			"	if (delta < uThreshold) discard;",
+			"	gl_FragColor = color;",
+			"	gl_FragColor.a = uOpacity;",
 			"}",
 	].join("\n");
 
@@ -79,19 +75,21 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	Cube.prototype.add = function(imageData) {
 		// grab a reference to the last texture
 		var lastChild = this.cube.children[this.cube.children.length - 1];
-		var recycledTexture = lastChild.material.uniforms.uData.texture;
+		var recycledTexture = lastChild.material.uniforms.uTexture2.texture;
 		// loop backwards through the children rippling the texture
 		for ( var i = this.cube.children.length - 1; i > 0; i--) {
 			var child = this.cube.children[i];
-			var previousChild = this.cube.children[i - 1];
-			child.material.uniforms.uData.texture = previousChild.material.uniforms.uData.texture;
+			var pChild = this.cube.children[i - 1];
+			child.material.uniforms.uTexture2.texture = child.material.uniforms.uTexture.texture;
+			child.material.uniforms.uTexture.texture = pChild.material.uniforms.uTexture.texture;
 		}
 		// update the recycled texture
 		recycledTexture.image.data = imageData.data;
 		recycledTexture.needsUpdate = true;
 		// and slap it on the front
-		var firstChild = this.cube.children[0];
-		firstChild.material.uniforms.uData.texture = recycledTexture;
+		var fChild = this.cube.children[0];
+		fChild.material.uniforms.uTexture2.texture = fChild.material.uniforms.uTexture.texture;
+		fChild.material.uniforms.uTexture.texture = recycledTexture;
 		this.needsUpdate = true;
 	};
 
@@ -102,6 +100,10 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		this.setCount(count);
 	};
 
+	Cube.prototype.createBlankTexture = function(count) {
+		return new THREE.DataTexture([], this.width, this.height, THREE.RGBAFormat);
+	};
+
 	Cube.prototype.setCount = function(count) {
 		count = Math.round(count);
 		var delta = -this.depth / count;
@@ -109,13 +111,27 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		for ( var i = 0; i < count; i++) {
 			var plane = this.cube.children[i];
 			if (!plane) {
-				var texture = new THREE.DataTexture([], this.width, this.height, THREE.RGBAFormat);
+				var texture = texture2 || this.createBlankTexture();
+				var texture2 = this.createBlankTexture();
 				var shaderMaterial = new THREE.ShaderMaterial({
 					uniforms : {
-						uData : {
+						uOpacity : {
+							type : "f",
+							value : 0.1
+						},
+						uThreshold : {
+							type : "f",
+							value : 0.1
+						},
+						uTexture : {
 							type : "t",
 							value : 0,
 							texture : texture
+						},
+						uTexture2 : {
+							type : "t",
+							value : 1,
+							texture : texture2
 						},
 					},
 					vertexShader : VERTEX_SHADER,
@@ -132,7 +148,7 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		for (i = this.cube.children.length - 1; i >= count; i--) {
 			var plane = this.cube.children[i];
 			this.cube.remove(plane);
-			this.renderer.deallocateTexture(plane.material.uniforms.uData.texture);
+			this.renderer.deallocateTexture(plane.material.uniforms.uTexture2.texture);
 			this.renderer.deallocateObject(plane);
 		}
 	};
