@@ -17,7 +17,9 @@ define([ './jquery', './Three' ], function($, THREE__) {
 
 	var FRAGMENT_SHADER = [
 			"uniform float uOpacity;",
-			"uniform float uThreshold;",
+			"uniform float uRenderThreshold;",
+			"uniform bool uRenderMovement;",
+			"uniform bool uRenderStatic;",
 			"uniform sampler2D uTexture;",
 			"uniform sampler2D uTexture2;",
 			"varying vec2 vUv;",
@@ -26,7 +28,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 			"	vec4 old = texture2D(uTexture2, vUv);",
 			"	float delta = (abs(old.r - color.r) + abs(old.g - color.g)",
 			"		+ abs(old.b - color.b))/3.0;",
-			"	if (delta < uThreshold) discard;",
+			"	if (!uRenderStatic && delta < uRenderThreshold) discard;",
+			"	if (!uRenderMovement && delta >= uRenderThreshold) discard;",
 			"	gl_FragColor = color;",
 			"	gl_FragColor.a = uOpacity;",
 			"}",
@@ -100,6 +103,24 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		this.setCount(count);
 	};
 
+	Cube.prototype.setOptions = function(options) {
+		this.opacity = options.opacity;
+		this.renderThreshold = options.renderThreshold / 255;
+		this.renderMovement = options.renderMovement;
+		this.renderStatic = options.renderStatic;
+
+		for ( var i = 0; i < this.cube.children.length; i++) {
+			var child = this.cube.children[i];
+			child.material.uniforms.uOpacity.value = this.opacity;
+			child.material.uniforms.uRenderThreshold.value = this.renderThreshold;
+			child.material.uniforms.uRenderMovement.value = this.renderMovement;
+			child.material.uniforms.uRenderStatic.value = this.renderStatic;
+		}
+
+		this.cube.scale.x = this.cube.scale.y = options.scaleXY;
+		this.cube.scale.z = options.scaleZ;
+	};
+
 	Cube.prototype.createBlankTexture = function(count) {
 		return new THREE.DataTexture([], this.width, this.height, THREE.RGBAFormat);
 	};
@@ -117,20 +138,28 @@ define([ './jquery', './Three' ], function($, THREE__) {
 					uniforms : {
 						uOpacity : {
 							type : "f",
-							value : 0.1
+							value : 1.0
 						},
-						uThreshold : {
+						uRenderThreshold : {
 							type : "f",
-							value : 0.1
+							value : 0.0
+						},
+						uRenderMovement : {
+							type : "i",
+							value : true
+						},
+						uRenderStatic : {
+							type : "i",
+							value : true
 						},
 						uTexture : {
 							type : "t",
-							value : 0,
+							value : i % 2,
 							texture : texture
 						},
 						uTexture2 : {
 							type : "t",
-							value : 1,
+							value : (i + 1) % 2,
 							texture : texture2
 						},
 					},
