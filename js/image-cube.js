@@ -2,8 +2,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 
 	// set the scene size
 	var WIDTH = 800, HEIGHT = 600;
-	var DEPTH = 100000;
-	var VIEW_ANGLE = 0.2, ASPECT = WIDTH / HEIGHT, NEAR = DEPTH - 500, FAR = DEPTH + 500;
+	var DEPTH = 1000000;
+	var VIEW_ANGLE = 0.034, ASPECT = WIDTH / HEIGHT, NEAR = DEPTH * 0.8, FAR = DEPTH * 2;
 
 	var VERTEX_SHADER = [
 			"varying vec2 vUv;",
@@ -26,8 +26,8 @@ define([ './jquery', './Three' ], function($, THREE__) {
 			"void main(void) {",
 			"	vec4 color = texture2D(uTexture, vUv);",
 			"	vec4 old = texture2D(uTexture2, vUv);",
-			"	float delta = (abs(old.r - color.r) + abs(old.g - color.g)",
-			"		+ abs(old.b - color.b))/3.0;",
+			"	float delta = (abs(old.r - color.r) + abs(old.g - color.g) +",
+			"		abs(old.b - color.b))/3.0;",
 			"	if (!uRenderStatic && delta < uRenderThreshold) discard;",
 			"	if (!uRenderMovement && delta >= uRenderThreshold) discard;",
 			"	gl_FragColor = color;",
@@ -36,7 +36,6 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	].join("\n");
 
 	function Cube(container) {
-		this.container = container;
 		this.scene = new THREE.Scene();
 
 		this.cube = new THREE.Object3D();
@@ -50,11 +49,11 @@ define([ './jquery', './Three' ], function($, THREE__) {
 		this.scene.add(this.camera);
 
 		// create a WebGL renderer, camera
-		this.renderer = new THREE.WebGLRenderer();
+		this.renderer = new THREE.WebGLRenderer({
+			canvas : container[0]
+		});
 		// start the renderer
 		this.renderer.setSize(WIDTH, HEIGHT);
-		// attach the render-supplied DOM element
-		this.container.append(this.renderer.domElement);
 
 		$(document).keydown(function(e) {
 			if (e.keyCode == 27) {
@@ -104,21 +103,22 @@ define([ './jquery', './Three' ], function($, THREE__) {
 	};
 
 	Cube.prototype.setOptions = function(options) {
-		this.opacity = options.opacity;
-		this.renderThreshold = options.renderThreshold / 255;
-		this.renderMovement = options.renderMovement;
-		this.renderStatic = options.renderStatic;
-
 		for ( var i = 0; i < this.cube.children.length; i++) {
 			var child = this.cube.children[i];
-			child.material.uniforms.uOpacity.value = this.opacity;
-			child.material.uniforms.uRenderThreshold.value = this.renderThreshold;
-			child.material.uniforms.uRenderMovement.value = this.renderMovement;
-			child.material.uniforms.uRenderStatic.value = this.renderStatic;
+			child.material.uniforms.uOpacity.value = options.opacity;
+			child.material.uniforms.uRenderThreshold.value = options.renderThreshold / 255;
+			child.material.uniforms.uRenderMovement.value = options.renderMovement;
+			child.material.uniforms.uRenderStatic.value = options.renderStatic;
 		}
 
 		this.cube.scale.x = this.cube.scale.y = options.scaleXY;
 		this.cube.scale.z = options.scaleZ;
+
+		this.camera.position.z = options.perspective;
+		this.camera.near = 0.8 * options.perspective;
+		this.camera.far = 2 * options.perspective;
+		this.camera.fov = (360 * Math.atan(HEIGHT / (2 * options.perspective))) / Math.PI;
+		this.camera.updateProjectionMatrix();
 	};
 
 	Cube.prototype.createBlankTexture = function(count) {

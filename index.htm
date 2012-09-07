@@ -5,12 +5,10 @@
         body {
             background: black;
         }
-        .container, .cube {
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
-        }
         .container {
-            /*top: 50%; right: 50%; bottom: 50%; left: 50%;*/
+            position: absolute;
+            top: 50%; right: 50%; bottom: 50%; left: 50%;
+            margin: -300px 0 0 -400px;
             cursor: move;
         }
         header, footer {
@@ -38,7 +36,7 @@
         <a href="http://www.scottlogic.co.uk/blog/chris">blog</a>
     </header>
     <div class="container">
-        <div class="cube"></div>
+        <canvas class="cube" width="800" height="600"></canvas>
     </div>
     <footer></footer>
     <script type="text/javascript" src="js/require.js" data-main="js/client"></script>
