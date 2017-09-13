@@ -33,7 +33,7 @@ define(
 
 			function getUserMedia(options) {
 				return new $.Deferred(function(deferred) {
-					var getUserMedia = navigator.webkitGetUserMedia || navigator.getUserMedia;
+					var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 					if (!getUserMedia) {
 						deferred.reject("getUserMedia unsupported");
 					} else {
