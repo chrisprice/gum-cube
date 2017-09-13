@@ -1,17 +1,18 @@
 require(
-		[ './webcam', './jquery', './transform', './image-cube', './mouse-control', './dat.gui.min' ],
-		function(webcam, $, transform, ImageCube, MouseControl) {
+		[ './webcam', './jquery', './transform', './image-cube', './mouse-control', './processing', './dat.gui.min' ],
+		function(webcam, $, transform, ImageCube, MouseControl, Processing) {
 			function showError(html) {
 				$('footer').html(html);
 			}
 
-			function Controller(options, webcam, imageCube, body, container, cube) {
+			function Controller(options, webcam, imageCube, body, container, cube, processing) {
 				this.options = options;
 				this.webcam = webcam;
 				this.imageCube = imageCube;
 				this.body = body;
 				this.container = container;
 				this.cube = cube;
+				this.processing = processing;
 				this.lastFrameTimestamp = 0;
 			}
 
@@ -33,25 +34,26 @@ require(
 
 			Controller.prototype.thresholdCanvas = function() {
 				var webcamImageData = this.webcam.getImageData();
-				var webcamData = webcamImageData.data;
-				var previousData = this.previousImageData.data;
-				var deltaData = this.deltaImageData.data;
-				for ( var i = 0, l = webcamData.length; i < l; i += 4) {
-					var r = webcamData[i];
-					var g = webcamData[i + 1];
-					var b = webcamData[i + 2];
-					var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-					deltaData[i] = webcamData[i];
-					deltaData[i + 1] = webcamData[i + 1];
-					deltaData[i + 2] = webcamData[i + 2];
-					if (Math.abs(previousData[i] - v) >= this.options.renderThreshold) {
-						deltaData[i + 3] = this.options.renderMovement ? 255 : 0;
-					} else {
-						deltaData[i + 3] = this.options.renderStatic ? 255 : 0;
-					}
-					webcamData[i] = webcamData[i + 1] = webcamData[i + 2] = v;
-				}
-				this.previousImageData = webcamImageData;
+				this.deltaImageData = this.processing.process(webcamImageData);
+				// var webcamData = webcamImageData.data;
+				// var previousData = this.previousImageData.data;
+				// var deltaData = this.deltaImageData.data;
+				// for ( var i = 0, l = webcamData.length; i < l; i += 4) {
+				// 	var r = webcamData[i];
+				// 	var g = webcamData[i + 1];
+				// 	var b = webcamData[i + 2];
+				// 	var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+				// 	deltaData[i] = webcamData[i];
+				// 	deltaData[i + 1] = webcamData[i + 1];
+				// 	deltaData[i + 2] = webcamData[i + 2];
+				// 	if (Math.abs(previousData[i] - v) >= this.options.renderThreshold) {
+				// 		deltaData[i + 3] = this.options.renderMovement ? 255 : 0;
+				// 	} else {
+				// 		deltaData[i + 3] = this.options.renderStatic ? 255 : 0;
+				// 	}
+				// 	webcamData[i] = webcamData[i + 1] = webcamData[i + 2] = v;
+				// }
+				// this.previousImageData = webcamImageData;
 				this.webcam.putImageData(this.deltaImageData);
 			};
 
@@ -150,7 +152,7 @@ require(
 			webcam.create().then(
 					function(webcam) {
 						var ctrl = new Controller(options, webcam, new ImageCube(cube), body,
-								container, cube);
+								container, cube, new Processing());
 						ctrl.resetDimensions();
 						ctrl.onAnimationFrame(0);
 						// removing the video from the body stops it
