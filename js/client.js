@@ -77,7 +77,7 @@ require(
 
 			var options = {
 				background : '#000',
-				opacity : 0.2,
+				opacity : 1,
 				renderMovement : true,
 				renderStatic : false,
 				renderThreshold : 10,
