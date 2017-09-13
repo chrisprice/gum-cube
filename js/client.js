@@ -34,26 +34,26 @@ require(
 
 			Controller.prototype.thresholdCanvas = function() {
 				var webcamImageData = this.webcam.getImageData();
-				this.deltaImageData = this.processing.process(webcamImageData);
-				// var webcamData = webcamImageData.data;
-				// var previousData = this.previousImageData.data;
-				// var deltaData = this.deltaImageData.data;
-				// for ( var i = 0, l = webcamData.length; i < l; i += 4) {
-				// 	var r = webcamData[i];
-				// 	var g = webcamData[i + 1];
-				// 	var b = webcamData[i + 2];
-				// 	var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-				// 	deltaData[i] = webcamData[i];
-				// 	deltaData[i + 1] = webcamData[i + 1];
-				// 	deltaData[i + 2] = webcamData[i + 2];
-				// 	if (Math.abs(previousData[i] - v) >= this.options.renderThreshold) {
-				// 		deltaData[i + 3] = this.options.renderMovement ? 255 : 0;
-				// 	} else {
-				// 		deltaData[i + 3] = this.options.renderStatic ? 255 : 0;
-				// 	}
-				// 	webcamData[i] = webcamData[i + 1] = webcamData[i + 2] = v;
-				// }
-				// this.previousImageData = webcamImageData;
+				var processedImageData = this.processing.process(webcamImageData);
+				var webcamData = processedImageData.data;
+				var previousData = this.previousImageData.data;
+				var deltaData = this.deltaImageData.data;
+				for ( var i = 0, l = webcamData.length; i < l; i += 4) {
+					var r = webcamData[i];
+					var g = webcamData[i + 1];
+					var b = webcamData[i + 2];
+					var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+					deltaData[i] = webcamData[i];
+					deltaData[i + 1] = webcamData[i + 1];
+					deltaData[i + 2] = webcamData[i + 2];
+					if (Math.abs(previousData[i] - v) >= this.options.renderThreshold) {
+						deltaData[i + 3] = this.options.renderMovement ? 255 : 0;
+					} else {
+						deltaData[i + 3] = this.options.renderStatic ? 255 : 0;
+					}
+					webcamData[i] = webcamData[i + 1] = webcamData[i + 2] = v;
+				}
+				this.previousImageData = processedImageData;
 				this.webcam.putImageData(this.deltaImageData);
 			};
 
@@ -62,9 +62,9 @@ require(
 
 				this.body.css('background', this.options.background).perspective(
 						this.options.perspective);
-				this.container.css('opacity', this.options.opacity);
 				this.cube.clearTransform().scale(this.options.scaleXY, this.options.scaleXY,
 						this.options.scaleZ);
+				this.imageCube.setOpacity(this.options.opacity);
 
 				if ((timestamp - this.lastFrameTimestamp >= 1000 / this.options.fps)
 						&& !this.options.paused) {

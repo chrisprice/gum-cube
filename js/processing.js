@@ -20,11 +20,10 @@ define(
       jsfeat.imgproc.canny(this.buffer, this.buffer, this.lowThreshold, this.highThreshold);
 
       var array = new Uint32Array(data.buffer);
-      var alpha = (0xff << 24);
       var i = this.buffer.cols * this.buffer.rows, pix = 0;
       while (--i >= 0) {
         pix = this.buffer.data[i];
-        array[i] = alpha | (pix << 16) | (pix << 8) | pix;
+        array[i] = (pix << 24) | (pix << 16) | (pix << 8) | pix;
       }
 
       return imageData;

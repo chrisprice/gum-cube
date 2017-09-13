@@ -24,6 +24,11 @@ define([ './jquery', './transform' ], function($, css3) {
 		this.setCount(count);
 	};
 
+	Cube.prototype.setOpacity = function(opacity) {
+		this.container.children()
+			.css('opacity', opacity);
+	};
+
 	Cube.prototype.setCount = function(count) {
 		var delta = -this.depth / count;
 		var z = (this.depth + delta) / 2;
