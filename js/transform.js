@@ -2,11 +2,13 @@ define([ './jquery' ], function($) {
 
 	var prefix = null;
 
-	[ 'Webkit', 'Moz', 'Ms', 'O' ].forEach(function(p) {
-		if (p + 'Transform' in document.createElement('span').style) {
-			prefix = p;
-		}
-	});
+	if (!'transform' in document.createElement('span').style) {
+		[ 'Webkit', 'Moz', 'Ms', 'O' ].forEach(function(p) {
+			if (p + 'Transform' in document.createElement('span').style) {
+				prefix = p;
+			}
+		});
+	}
 
 	function applyPrefixed(element, name, value, append) {
 		if (prefix) {
@@ -76,7 +78,7 @@ define([ './jquery' ], function($) {
 		},
 		perspective : function(value) {
 			$.each(this, function() {
-				applyPrefixed(this, 'perspective', Number(value).toFixed(0));
+				applyPrefixed(this, 'perspective', numberToPx(x));
 			});
 			return this;
 		},
